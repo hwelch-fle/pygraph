@@ -39,26 +39,35 @@ def _deprox[T: Mapping[str, Any]](o: T) -> T:
         )
     return deproxed
 
+
 class Node:
     __defaults__ = DefaultNodeOptions
     __slots__ = ('data', '_is_custom')
     
     def __init__(self, id: int | str, **kwargs: Unpack[NodeOptions]) -> None:
-        self.data: NodeRecord = {'id': id, 'label': str(id)}
+        self.data: NodeRecord = {'id': id, 'label': kwargs.get('label') or str(id)}
         self._is_custom = self.__defaults__ is not DefaultNodeOptions
         if self._is_custom:
             self.data.update(_deprox(self.__defaults__)) # type: ignore
         self.data.update(kwargs) # type: ignore
-        
-    
+      
     def __getitem__(self, key: str) -> Any:
         return self.data[key] # type: ignore   
+    
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.data[key] = value
+    
+    def get[D](self, key: str, default: D = None) -> Any | D:
+        try:
+            return self[key]
+        except KeyError:
+            return default
     
     def __repr__(self) -> str:
         return (
             f'{self.__class__.__name__}('
             f'id={self.data['id']}, '
-            f'options=<{sorted(set(self.data.keys())-{'id'})}>)'
+            f'data=<{sorted(set(self.data.keys())-{'id'})}>)'
         )
   
     @property
@@ -79,9 +88,12 @@ class Node:
             for k in defaults:
                 self.data.pop(k, None)
     
-    def set(self, **options: Unpack[EdgeOptions]) -> None:
+    def set(self, **options: Unpack[NodeOptions]) -> None:
         self.data.update(options) # type: ignore
 
+    @classmethod
+    def set_node_defaults(cls, defaults: NodeOptions) -> None:
+        cls.__defaults__ = defaults
 
 class Edge:
     __defaults__ = DefaultEdgeOptions
