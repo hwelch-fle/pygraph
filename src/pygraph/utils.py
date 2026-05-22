@@ -60,7 +60,7 @@ def style_nodes(nodes: Iterable[Node], **options: Unpack[EdgeOptions]) -> list[N
     return [node.set(**options) or node for node in nodes]
 
 
-def get_neighborhood(nx: Network, root: Node | NodeId, level: int = 1, copy: bool = False) -> Network:
+def get_neighborhood(nx: Network, root: Node | NodeId, level: int = 1, *, copy: bool = False) -> Network:
     """Get a new Network that represents the neighborhood of a specified Node
     
     Args:
@@ -74,20 +74,30 @@ def get_neighborhood(nx: Network, root: Node | NodeId, level: int = 1, copy: boo
         
     Note:
         A Neighborhood will create a new Network, but the edges and nodes will be references 
-        to the originals, meaning updates to either will 
+        to the originals, meaning updates to either will be shared. Set the `copy` flag to 
+        create a deep copy of all network elements in the new Network.
     """
     if level < 0:
         raise ValueError(
             f'Level must be a positive integer (or zero for only the root node), got {level}'
         )
     
-    hood = Network([root])
+    neighborhood = Network([root])
     while level > 0:
-        for neighbors in (nx.adj_list(n) for n in hood.nodes):
-            hood.add_nodes_from(deepcopy(n) if copy else n for n in neighbors.keys())
-            hood.add_edges_from(deepcopy(e) if copy else e for e in neighbors.values())
+        for neighbors in (nx.adj_list(n) for n in neighborhood.nodes):
+            neighborhood.add_nodes_from(
+                deepcopy(node) if copy else node for node in neighbors.keys()
+            )
+            neighborhood.add_edges_from(
+                deepcopy(edge) if copy else edge for edge in neighbors.values()
+            )
         level -= 1
-    return hood
+    return neighborhood
+
+
+def kevin_bacon(nx: Network, node: Node | NodeId, *, copy: bool = False) -> Network:
+    """Shorthand for a level 7 neighborhood"""
+    return get_neighborhood(nx, node, 7, copy=copy)
 
 
 def to_html(nx: Network, template: jinja2.Template, **kwargs: Any) -> str:
