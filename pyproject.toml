@@ -1,0 +1,19 @@
+[project]
+name = "pygraph"
+version = "0.1.0"
+description = "A re-write of pyvisjs that adds more functionality and uses a `rustworkx` backend"
+readme = "README.md"
+authors = [
+    { name = "hwelch-fle", email = "91618355+hwelch-fle@users.noreply.github.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "ipython>=9.13.0",
+    "jinja2>=3.1.6",
+    "pandas>=3.0.3",
+    "rustworkx>=0.17.1",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.12,<0.11.0"]
+build-backend = "uv_build"
