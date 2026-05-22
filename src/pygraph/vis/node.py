@@ -156,26 +156,24 @@ class NodeOptions(TypedDict, total=False):
     borderWidth: int
     borderWidthSelected: int
     brokenImage: str
-    chosen: Chosen
-    color: Color
+    chosen: Chosen | bool
+    color: Color | str
     ctxRenderer: JSFunc
     opacity: float
     fixed: Fixed | bool
-    font: Font | bool
+    font: Font | str | bool # ?
     group: str
-    heightConstraint: HeightConstraint | bool
+    heightConstraint: HeightConstraint | int | bool
     hidden: bool
     icon: Icon
-    image: Image
+    image: Image | str
     imagePadding: ImagePadding | int
-    label: str
     labelHighlightBold: bool
-    level: int
     margin: Margin | int
     mass: int
     physics: bool
     scaling: Scaling
-    shadow: Shadow
+    shadow: Shadow | bool
     shape: Literal[
         # Label inside
         'ellipse', 'circle', 'database', 'box', 'text', 
@@ -184,10 +182,15 @@ class NodeOptions(TypedDict, total=False):
     ]
     shapeProperties: ShapeProperties
     size: int
+    widthConstraint: WidthConstraint | int | bool
+    x: int
+    y: int
     title: str
     value: int
-    widthConstraint: WidthConstraint | int | bool
+    level: int
+    label: str
 
+    
 DefaultNodeOptions: NodeOptions = {
     'borderWidth': 1,
     'borderWidthSelected': 2,
@@ -213,7 +216,4 @@ DefaultNodeOptions = MappingProxyType(DefaultNodeOptions) # type: ignore
 
 
 class NodeRecord(NodeOptions):
-    # x: int
-    # y: int
     id: int | str
-    
