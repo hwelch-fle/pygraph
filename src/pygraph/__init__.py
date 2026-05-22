@@ -1,2 +1,2 @@
-from .network import *
+from .pygraph import *
 from .utils import *

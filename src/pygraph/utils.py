@@ -6,7 +6,7 @@ from typing import Any, Unpack
 from collections.abc import Iterable
 
 from pygraph.vis import *
-from pygraph.network import *
+from pygraph.pygraph import *
 
 def shortest_paths(nx: Network, fr: Node | NodeId, to: Node | NodeId, *, directed: bool = False) -> list[list[Edge]]:
     """Highlight the shortest path between two nodes in the network
