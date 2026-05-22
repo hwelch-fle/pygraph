@@ -99,8 +99,10 @@ class Edge:
     __defaults__ = DefaultEdgeOptions
     __slots__ = ('data', '_is_custom',)
     
-    def __init__(self, frm: int | str, to: int | str, **kwargs: Unpack[EdgeOptions]) -> None:
+    def __init__(self, frm: int | str, to: int | str, *, id: str | None = None, **kwargs: Unpack[EdgeOptions]) -> None:
         self.data: EdgeRecord = {'from': frm, 'to': to}
+        if id:
+            self.data['id'] = id
         self._is_custom = self.__defaults__ is not DefaultEdgeOptions
         if self._is_custom:
             self.data.update(_deprox(self.__defaults__)) # type: ignore
@@ -109,18 +111,22 @@ class Edge:
     def __getitem__(self, key: str) -> Any:
         return self.data[key] # type: ignore
     
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.data[key] = value
+    
+    def get[D](self, key: str, default: D = None) -> Any | D:
+        try:
+            return self[key]
+        except KeyError:
+            return default
+    
     def __repr__(self) -> str:
         return (
             f'{self.__class__.__name__}('
             f'from={self.data['from']}, to={self.data['to']}, '
-            f'options=<{sorted(set(self.data.keys())-{'from', 'to'})}>)'
+            f'data=<{sorted(set(self.data.keys())-{'from', 'to'})}>)'
         )
-    
-    # Override __iter__ to allow unpacking 
-    def __iter__(self) -> Iterable[NodeId]:
-        yield self.data['from']
-        yield self.data['to']
-    
+     
     @property
     def key(self) -> EdgeId:
         return (self.data['from'], self.data['to'])
@@ -142,6 +148,9 @@ class Edge:
     def set(self, **options: Unpack[EdgeOptions]) -> None:
         self.data.update(options) # type: ignore
 
+    @classmethod
+    def set_edge_defaults(cls, defaults: EdgeOptions) -> None:
+        cls.__defaults__ = defaults
 
 class NetworkData(TypedDict):
     """Serialized json data required for creating visjs Network objects.
