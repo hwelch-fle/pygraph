@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 from types import MappingProxyType
 
 
@@ -270,26 +270,25 @@ DefaultWidthConstraint: WidthConstraint = {}
 DefaultWidthConstraint = MappingProxyType(DefaultWidthConstraint) # type: ignore
    
 class EdgeOptions(TypedDict, total=False):
-    arrows: Arrows
+    arrows: Arrows | str
     endPointOffset: ArrowOffset
     arrowStrikethrough: bool
-    chosen: Chosen
-    color: Color
+    chosen: Chosen | bool
+    color: Color | str
     dashes: bool | list[int]
-    font: Font
+    font: Font | str
     hidden: bool
-    hoverWidth: float | Any
-    id: str
+    hoverWidth: float | JSFunc
     label: str
     labelHighlightBold: bool
     length: float
     physics: bool
     scaling: Scaling
-    selectionWidth: JSFunc | int
+    selectionWidth: int | JSFunc
     #selfReferenceSize: None #deprecated
     selfReference: SelfReference
-    shadow: Shadow
-    smooth: Smoothing
+    shadow: Shadow | bool
+    smooth: Smoothing | bool
     title: str
     value: float
     width: int
@@ -326,4 +325,6 @@ _Edge = TypedDict(
 )
 
 # Final edge definition
-class EdgeRecord(_Edge, EdgeOptions): ...
+class EdgeRecord(_Edge, EdgeOptions):
+    id: NotRequired[str]
+    
