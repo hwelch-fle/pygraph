@@ -82,7 +82,10 @@ def get_neighborhood(nx: Network, root: Node | NodeId, level: int = 1, *, copy: 
             f'Level must be a positive integer (or zero for only the root node), got {level}'
         )
     
-    neighborhood = Network([root])
+    if not isinstance(root, Node):
+        root = nx[root]
+    
+    neighborhood = Network([deepcopy(root) if copy else root])
     while level > 0:
         for neighbors in (nx.adj_list(n) for n in neighborhood.nodes):
             neighborhood.add_nodes_from(
