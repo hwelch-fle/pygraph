@@ -279,61 +279,62 @@ class Network:
         return f'{self.__class__.__name__}(N=|{len(self.nodes)}|, E=|{len(self.edges)}|)'
    
     @overload
-    def __getitem__(self, key: NodeId) -> Node: ...
+    def __getitem__(self, key: NodeId | Node) -> Node: ...
     @overload
-    def __getitem__(self, key: EdgeId) -> Edge: ...
-    def __getitem__(self, key: NodeId | EdgeId) -> Node | Edge:
+    def __getitem__(self, key: EdgeId | Edge) -> Edge: ...
+    def __getitem__(self, key: NodeId | Node | EdgeId | Edge) -> Node | Edge:
+        key = key.key if isinstance(key, (Node, Edge)) else key
+        
         if isinstance(key, (str, int)):
             return self.graph[self.node_map[key]]
         elif isinstance(key, tuple) and len(key) == 2: # type: ignore
             return self.graph.get_edge_data_by_index(self.edge_map[key])
-        raise KeyError(f'Invalid Edge/Node Id: {key}')
+        
+        raise KeyError(f'Invalid Edge/Node Id: {type(item)}:{item}')
     
     @overload
-    def get[D](self, key: NodeId, default: D = None) -> Node | D: ...
+    def get[D](self, key: NodeId | Node, default: D = None) -> Node | D: ...
     @overload
-    def get[D](self, key: EdgeId, default: D = None) -> Edge | D: ...
-    def get[D](self, key: NodeId | EdgeId, default: D = None) -> Any | D:
+    def get[D](self, key: EdgeId | Edge, default: D = None) -> Edge | D: ...
+    def get[D](self, key: NodeId | Node | EdgeId | Edge, default: D = None) -> Any | D:
         try:
             return self[key]
         except KeyError:
             return default
     
     @overload
-    def __setitem__(self, key: NodeId, value: NodeOptions) -> None: ...
+    def __setitem__(self, key: NodeId | Node, value: NodeOptions) -> None: ...
     @overload
-    def __setitem__(self, key: EdgeId, value: EdgeOptions) -> None: ...
-    def __setitem__(self, key: NodeId | EdgeId, value: Any) -> None:
-        if isinstance(key, (str | int)):
-            node = self[key]
-            node.data.update(value)
-            key = self.node_map[key]
-            self.graph[key] = node
+    def __setitem__(self, key: EdgeId | Edge, value: EdgeOptions) -> None: ...
+    def __setitem__(self, key: Any, value: Any) -> None:
+        key = key.key if isinstance(key, (Node, Edge)) else key
+        
+        if isinstance(key, (str, int)):
+            self[key].data.update(value)
         elif isinstance(key, tuple) and len(key) == 2: # type: ignore
-            edge = self[key]
-            edge.data.update(value)
-            key = self.edge_map[key]
-            self.graph.update_edge_by_index(key, edge)
-        raise KeyError(f'Invalid Edge/Node Id: {key}')
+            self[key].data.update(value)
+        else:
+            raise KeyError(f'Invalid Edge/Node Id: {key}')
     
-    def __delitem__(self, item: Any):
+    def __delitem__(self, item: NodeId | Node | EdgeId | Edge):
         if isinstance(item, (Node, Edge)):
             item = item.key
         
-        if isinstance(item, (int | str)):
+        if isinstance(item, (str, int)):
             self.graph.remove_node(self.node_map[item])
         elif isinstance(item, tuple) and len(item) == 2: # type: ignore
             self.graph.remove_edge_from_index(self.edge_map[item])
-        raise KeyError(f'Invalid Edge/Node Id: {item}')
+        else:
+            raise KeyError(f'Invalid Edge/Node Id: {type(item)}:{item}')
     
-    def __contains__(self, item: Any) -> bool:
-        if isinstance(item, (Node, Edge)):
-            item = item.key
+    def __contains__(self, item: NodeId | Node | EdgeId | Edge) -> bool:
+        item = item.key if isinstance(item, (Node, Edge)) else item
         
-        if isinstance(item, (str | int)):
+        if isinstance(item, (str, int)):
             return item in self.node_map
         elif isinstance(item, tuple) and len(item) == 2: # type: ignore
             return item in self.edge_map
+        
         return False
     
     # Network Modifiers
