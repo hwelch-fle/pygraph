@@ -2,6 +2,8 @@
 name = "pygraph"
 version = "0.1.0"
 description = "A re-write of pyvisjs that adds more functionality and uses a `rustworkx` backend"
+license = "GPL-3.0"
+license-files = ["LICENSE*"]
 readme = "README.md"
 authors = [
     { name = "hwelch-fle", email = "91618355+hwelch-fle@users.noreply.github.com" }
