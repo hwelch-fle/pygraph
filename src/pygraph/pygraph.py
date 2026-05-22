@@ -200,10 +200,17 @@ class Network:
     
     # Graph Manipulators 
     
-    def add_edge(self, e: Edge | EdgeId) -> int | None:
+    def add_edge(self, e: Edge | EdgeId, *, create_nodes: bool = False) -> int | None:
         node_map = self.node_map
         # Cast to Edge
-        e = e if isinstance(e, Edge) else Edge(*e)
+        e = e if isinstance(e, Edge) else Edge(*e[:2])
+        
+        if create_nodes:
+            f,t = e.key
+            if f not in node_map: self.add_node(f)
+            if t not in node_map: self.add_node(t)
+            node_map = self.node_map
+        
         if e not in self:
             return self.graph.add_edge(node_map[e['from']], node_map[e['to']], e)
         
@@ -213,9 +220,18 @@ class Network:
         if n not in self:
             return self.graph.add_node(n)
         
-    def add_edges_from(self, es: Iterable[Edge | EdgeId]) -> list[int]:
+    def add_edges_from(self, es: Iterable[Edge | EdgeId], *, create_nodes: bool = False) -> list[int]:
         node_map = self.node_map
         existing = set[EdgeId](self.edge_map)
+        
+        if create_nodes:
+            # Store es since it could be a generator/iterator
+            es = [e if isinstance(e, Edge) else Edge(*e[:2]) for e in es]
+            self.add_nodes_from(
+                n for e in es for n in e.key if n not in node_map
+            )
+            node_map = self.node_map
+
         return self.graph.add_edges_from(
             (node_map[e['from']], node_map[e['to']], e) for _ in es
             # Cast to Edge
