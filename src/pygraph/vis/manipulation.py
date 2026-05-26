@@ -1,10 +1,12 @@
-from typing import Any, TypedDict
 from types import MappingProxyType
+from typing import (
+    Any,
+    TypedDict,
+)
 
 from .node import NodeOptions
 
-
-__all__ = 'ManipulationOptions', 'DefaultManipulationOptions'
+__all__ = 'DefaultManipulationOptions', 'ManipulationOptions'
 
 
 type JSFunc = Any

@@ -1,8 +1,7 @@
-from typing import TypedDict
 from types import MappingProxyType
+from typing import TypedDict
 
-
-__all__ = 'InteractionOptions', 'DefaultInteractionOptions'
+__all__ = 'DefaultInteractionOptions', 'InteractionOptions'
 
 
 class Speed(TypedDict, total=False):
@@ -47,7 +46,7 @@ class InteractionOptions(TypedDict, total=False):
     tooltipDelay: int
     zoomSpeed: int
     zoomView: bool
-    
+
 DefaultInteractionOptions: InteractionOptions = {
     'dragNodes': True,
     'dragView': True,

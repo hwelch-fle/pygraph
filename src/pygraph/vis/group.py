@@ -1,9 +1,12 @@
-from typing import TypedDict, TYPE_CHECKING
 from types import MappingProxyType
+from typing import (
+    TYPE_CHECKING,
+    TypedDict,
+)
+
 from .node import NodeOptions
 
-
-__all__ = 'GroupOptions', 'DefaultGroupOptions'
+__all__ = 'DefaultGroupOptions', 'GroupOptions'
 
 
 if TYPE_CHECKING:

@@ -1,16 +1,21 @@
-from typing import Literal, TypedDict, Any
 from types import MappingProxyType
+from typing import (
+    Any,
+    Literal,
+    TypedDict,
+)
 
 # Same options as Edge
 from .edge import (
+    DefaultScaling,
+    DefaultShadow,
     Font,
-    Scaling, DefaultScaling,
-    Shadow, DefaultShadow,
+    Scaling,
+    Shadow,
     WidthConstraint,
 )
 
-
-__all__ = 'NodeOptions', 'NodeRecord', 'DefaultNodeOptions'
+__all__ = 'DefaultNodeOptions', 'NodeOptions', 'NodeRecord'
 
 
 type JSFunc = Any
@@ -53,7 +58,7 @@ class Color(TypedDict, total=False):
     background: HexColor
     highlight: Highlight
     hover: Hover
-    
+
 DefaultColor: Color = {
     'border': '#2B7CE9',
     'background': '#D2E5FF',
@@ -66,7 +71,7 @@ DefaultColor = MappingProxyType(DefaultColor) # type: ignore
 class Fixed(TypedDict, total=False):
     x: bool
     y: bool
-    
+
 DefaultFixed: Fixed = {
     'x': False,
     'y': False,
@@ -102,7 +107,7 @@ DefaultIcon = MappingProxyType(DefaultIcon) # type: ignore
 class Image(TypedDict, total=False):
     unselected: str
     selected: str
-    
+
 DefaultImage: Image = {}
 DefaultImage = MappingProxyType(DefaultImage) # type: ignore
 
@@ -112,7 +117,7 @@ class Margin(TypedDict, total=False):
     bottom: int
     left: int
     right: int
-    
+
 DefaultMargin: Margin = {
     'top': 5,
     'bottom': 5,
@@ -123,7 +128,7 @@ DefaultMargin = MappingProxyType(DefaultMargin) # type: ignore
 
 
 class ImagePadding(Margin, total=False): ...
-    
+
 DefaultImagePadding: ImagePadding = {
     'top': 0,
     'bottom': 0,
@@ -140,7 +145,7 @@ class ShapeProperties(TypedDict, total=False):
     useImageSize: bool
     useBorderWithImage: bool
     coordinateOrigin: Literal['center', 'top-left']
-    
+
 DefaultShapeProperties: ShapeProperties = {
     'borderDashes': False,
     'borderRadius': 6,
@@ -176,7 +181,7 @@ class NodeOptions(TypedDict, total=False):
     shadow: Shadow | bool
     shape: Literal[
         # Label inside
-        'ellipse', 'circle', 'database', 'box', 'text', 
+        'ellipse', 'circle', 'database', 'box', 'text',
         # Label Outside
         'image', 'circularImage', 'diamond', 'dot', 'star', 'triangle', 'triangleDown', 'hexagon', 'square', 'icon'
     ]
@@ -190,7 +195,7 @@ class NodeOptions(TypedDict, total=False):
     level: int
     label: str
 
-    
+
 DefaultNodeOptions: NodeOptions = {
     'borderWidth': 1,
     'borderWidthSelected': 2,

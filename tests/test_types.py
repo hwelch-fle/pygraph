@@ -1,9 +1,22 @@
 from typing import assert_type
-from pygraph import *
+
+from pygraph import (
+    Edge,
+    EdgeId,
+    EdgeOptions,
+    EdgeRecord,
+    Network,
+    NetworkData,
+    NetworkOptions,
+    Node,
+    NodeId,
+    NodeOptions,
+    NodeRecord,
+)
 
 
 def test_network_attributes():
-    nx = Network()    
+    nx = Network()
     assert_type(nx.nodes, list[Node])
     assert_type(nx.edges, list[Edge])
     assert_type(nx.node_map, dict[NodeId, int])
