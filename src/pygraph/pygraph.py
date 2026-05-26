@@ -8,22 +8,19 @@ from types import MappingProxyType
 from typing import (
     Any,
     Literal,
+    TypeAlias,
     TypedDict,
-    Unpack,
+    TypeVar,
     overload,
 )
 
 import rustworkx as rx
 
 from pygraph.vis.physics import (
-    BarnesHut,
     DefaultBarnesHut,
     DefaultForceAtlas2Based,
     DefaultHierarchicalRepulsion,
     DefaultRepulsion,
-    ForceAtlas2Based,
-    HierarchicalRepulsion,
-    Repulsion,
 )
 
 from .vis import (
@@ -52,15 +49,16 @@ __all__ = (
     'NodeRecord',
 )
 
-
-type NodeId = str | int
-type EdgeId = tuple[NodeId, NodeId]
+NodeId: TypeAlias = str | int
+EdgeId: TypeAlias = tuple[NodeId, NodeId]
+T = TypeVar('T', bound=Mapping[str, Any])
+D = TypeVar('D')
 
 
 # Helper to de proxy the defaults
 # types are all wrong becuase we're lying about what the Default*
 # dicts are since MappingProxyType will clear all TypedDict hinting
-def _deprox[T: Mapping[str, Any]](o: T) -> T:
+def _deprox(o: T) -> T:
     """INTERNAL: Used to turn nested MappingProxyTypes into a dict"""
     deproxed: T = {}      # type: ignore
     for k, v in o.items():
@@ -76,7 +74,7 @@ class Node:
     __defaults__ = DefaultNodeOptions
     __slots__ = ('_is_custom', 'data')
 
-    def __init__(self, id: int | str, **kwargs: Unpack[NodeOptions]) -> None:
+    def __init__(self, id: int | str, **kwargs: Any) -> None:
         self.data: NodeRecord = {'id': id, 'label': kwargs.get('label') or str(id)}
         self._is_custom = self.__defaults__ is not DefaultNodeOptions
         if self._is_custom:
@@ -89,7 +87,7 @@ class Node:
     def __setitem__(self, key: str, value: Any) -> None:
         self.data[key] = value
 
-    def get[D](self, key: str, default: D = None) -> Any | D:
+    def get(self, key: str, default: D = None) -> Any | D:
         try:
             return self[key]
         except KeyError:
@@ -98,8 +96,8 @@ class Node:
     def __repr__(self) -> str:
         return (
             f'{self.__class__.__name__}('
-            f'id={self.data['id']}, '
-            f'data=<{sorted(set(self.data.keys()) - {'id'})}>)'
+            f'id={self.data["id"]}, '
+            f'data=<{sorted(set(self.data.keys()) - {"id"})}>)'
         )
 
     @property
@@ -120,7 +118,7 @@ class Node:
             for k in defaults:
                 self.data.pop(k, None)
 
-    def set(self, **options: Unpack[NodeOptions]) -> None:
+    def set(self, **options: Any) -> None:
         self.data.update(options)  # type: ignore
 
     @classmethod
@@ -132,8 +130,8 @@ class Edge:
     __defaults__ = DefaultEdgeOptions
     __slots__ = ('_is_custom', 'data')
 
-    def __init__(self, frm: int | str, to: int | str, *, id: str | None = None, **kwargs: Unpack[EdgeOptions]) -> None:
-        self.data: EdgeRecord = {'from': frm, 'to': to}
+    def __init__(self, frm: int | str, to: int | str, *, id: str | None = None, **kwargs: Any) -> None:
+        self.data = {'from': frm, 'to': to}
         if id:
             self.data['id'] = id
         self._is_custom = self.__defaults__ is not DefaultEdgeOptions
@@ -147,7 +145,7 @@ class Edge:
     def __setitem__(self, key: str, value: Any) -> None:
         self.data[key] = value
 
-    def get[D](self, key: str, default: D = None) -> Any | D:
+    def get(self, key: str, default: D = None) -> Any | D:
         try:
             return self[key]
         except KeyError:
@@ -156,8 +154,8 @@ class Edge:
     def __repr__(self) -> str:
         return (
             f'{self.__class__.__name__}('
-            f'from={self.data['from']}, to={self.data['to']}, '
-            f'data=<{sorted(set(self.data.keys()) - {'from', 'to'})}>)'
+            f'from={self.data["from"]}, to={self.data["to"]}, '
+            f'data=<{sorted(set(self.data.keys()) - {"from", "to"})}>)'
         )
 
     @property
@@ -178,7 +176,7 @@ class Edge:
             for k in defaults:
                 self.data.pop(k, None)
 
-    def set(self, **options: Unpack[EdgeOptions]) -> None:
+    def set(self, **options: Any) -> None:
         self.data.update(options)  # type: ignore
 
     @classmethod
@@ -203,10 +201,10 @@ class Network:
     def __init__(self,
                  ns: Iterable[Node | NodeId] | None = None,
                  es: Iterable[Edge | EdgeId] | None = None,
-                 **kwargs: Unpack[NetworkOptions]
+                 **kwargs: Any
         ) -> None:
         self.options = _deprox(DefaultNetworkOptions)
-        self.options.update(kwargs)
+        self.options.update(kwargs)  # type: ignore
         self.graph = rx.PyDiGraph()
         self.add_nodes_from(ns or [])
         self.add_edges_from(es or [])
@@ -330,10 +328,10 @@ class Network:
         raise KeyError(f'Invalid Edge/Node Id: {type(key)}:{key}')
 
     @overload
-    def get[D](self, key: NodeId | Node, default: D = None) -> Node | D: ...
+    def get(self, key: NodeId | Node, default: D = None) -> Node | D: ...
     @overload
-    def get[D](self, key: EdgeId | Edge, default: D = None) -> Edge | D: ...
-    def get[D](self, key: NodeId | Node | EdgeId | Edge, default: D = None) -> Any | D:
+    def get(self, key: EdgeId | Edge, default: D = None) -> Edge | D: ...
+    def get(self, key: NodeId | Node | EdgeId | Edge, default: D = None) -> Any | D:
         try:
             return self[key]
         except KeyError:
@@ -381,33 +379,33 @@ class Network:
             self.options['edges'] = {}
         self.options['edges'].update({'arrows': {'to': {'enabled': val}}})
 
-    def barnes_hut(self, **barnes_hut: Unpack[BarnesHut]) -> None:
+    def barnes_hut(self, **barnes_hut: Any) -> None:
         if not barnes_hut:
-            barnes_hut = DefaultBarnesHut
+            barnes_hut = dict(DefaultBarnesHut.items())
         if 'physics' not in self.options:
             self.options['physics'] = {}
-        self.options['physics']['barnesHut'] = barnes_hut
+        self.options['physics']['barnesHut'] = barnes_hut  # type: ignore
 
-    def force_atlas_2_based(self, **force_atlas_2_based: Unpack[ForceAtlas2Based]) -> None:
+    def force_atlas_2_based(self, **force_atlas_2_based: Any) -> None:
         if not force_atlas_2_based:
-            force_atlas_2_based = DefaultForceAtlas2Based
+            force_atlas_2_based = dict(DefaultForceAtlas2Based.items())
         if 'physics' not in self.options:
             self.options['physics'] = {}
-        self.options['physics']['forceAtlas2Based'] = force_atlas_2_based
+        self.options['physics']['forceAtlas2Based'] = force_atlas_2_based  # type: ignore
 
-    def repulsion(self, **repulsion: Unpack[Repulsion]) -> None:
+    def repulsion(self, **repulsion: Any) -> None:
         if not repulsion:
-            repulsion = DefaultRepulsion
+            repulsion = dict(DefaultRepulsion.items())
         if 'physics' not in self.options:
             self.options['physics'] = {}
-        self.options['physics']['repulsion'] = repulsion
+        self.options['physics']['repulsion'] = repulsion  # type: ignore
 
-    def hrepulsion(self, **hrepulsion: Unpack[HierarchicalRepulsion]) -> None:
+    def hrepulsion(self, **hrepulsion: Any) -> None:
         if not hrepulsion:
-            hrepulsion = DefaultHierarchicalRepulsion
+            hrepulsion = dict(DefaultHierarchicalRepulsion.items())
         if 'physics' not in self.options:
             self.options['physics'] = {}
-        self.options['physics']['hierarchicalRepulsion'] = hrepulsion
+        self.options['physics']['hierarchicalRepulsion'] = hrepulsion  # type: ignore
 
     def solver(self, solver: Literal['barnesHut', 'repulsion', 'hierarchicalRepulsion', 'forceAtlas2Based']) -> None:
         if 'physics' not in self.options:
@@ -438,12 +436,12 @@ class Network:
         """
         if node_attr is None and default_label:
             def _node_attr(n: Node):
-                return {'label': f'{n.data.get('label')}'}
+                return {'label': f'{n.data.get("label")}'}
             node_attr = _node_attr
 
         if edge_attr is None and default_label:
             def _edge_attr(e: Edge):
-                return {'label': f'{e.data.get('label')}'}
+                return {'label': f'{e.data.get("label")}'}
             edge_attr = _edge_attr
 
         return self.graph.to_dot(node_attr, edge_attr, graph_attr)

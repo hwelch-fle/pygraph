@@ -2,6 +2,7 @@ from types import MappingProxyType
 from typing import (
     Any,
     Literal,
+    TypeAlias,
     TypedDict,
 )
 
@@ -18,11 +19,11 @@ from .edge import (
 __all__ = 'DefaultNodeOptions', 'NodeOptions', 'NodeRecord'
 
 
-type JSFunc = Any
-type HexColor = str
-type RGBColor = str
-type RGBAColor = str
-type HTMLColor = str
+JSFunc: TypeAlias = Any
+HexColor: TypeAlias = str
+RGBColor: TypeAlias = str
+RGBAColor: TypeAlias = str
+HTMLColor: TypeAlias = str
 
 
 class Chosen(TypedDict, total=False):

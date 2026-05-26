@@ -4,7 +4,7 @@ from types import MappingProxyType
 from typing import (
     Any,
     Literal,
-    NotRequired,
+    TypeAlias,
     TypedDict,
 )
 
@@ -12,10 +12,10 @@ __all__ = 'DefaultEdgeOptions', 'EdgeOptions', 'EdgeRecord'
 
 
 # Color types for disambiguation of which colorstrings are allowed
-type JSFunc = Any
-type HexColor = str
-type RGBColor = str
-type RGBAColor = str
+JSFunc: TypeAlias = Any
+HexColor: TypeAlias = str
+RGBColor: TypeAlias = str
+RGBAColor: TypeAlias = str
 
 
 # Type Definitions
@@ -345,4 +345,4 @@ _Edge = TypedDict(
 
 # Final edge definition
 class EdgeRecord(_Edge, EdgeOptions):
-    id: NotRequired[str]
+    id: str

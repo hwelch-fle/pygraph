@@ -3,7 +3,6 @@ from collections.abc import Iterable
 from copy import deepcopy
 from typing import (
     Any,
-    Unpack,
 )
 
 import jinja2
@@ -14,9 +13,6 @@ from pygraph.pygraph import (
     Network,
     Node,
     NodeId,
-)
-from pygraph.vis import (
-    EdgeOptions,
 )
 
 
@@ -46,7 +42,7 @@ def shortest_paths(nx: Network, fr: Node | NodeId, to: Node | NodeId, *, directe
     return [[nx[edge] for edge in itertools.pairwise(path)] for path in shortest]
 
 
-def style_edges(edges: Iterable[Edge], **options: Unpack[EdgeOptions]) -> list[Edge]:
+def style_edges(edges: Iterable[Edge], **options: Any) -> list[Edge]:
     """Apply a style to all supplied Edges
 
     Args:
@@ -59,7 +55,7 @@ def style_edges(edges: Iterable[Edge], **options: Unpack[EdgeOptions]) -> list[E
     return [edge.set(**options) or edge for edge in edges]
 
 
-def style_nodes(nodes: Iterable[Node], **options: Unpack[EdgeOptions]) -> list[Node]:
+def style_nodes(nodes: Iterable[Node], **options: Any) -> list[Node]:
     """Apply a style to all supplied Nodes
 
     Args:

@@ -2,13 +2,14 @@ from types import MappingProxyType
 from typing import (
     Any,
     Literal,
+    TypeAlias,
     TypedDict,
 )
 
 __all__ = 'DefaultPhysicsOptions', 'PhysicsOptions'
 
 
-type JSFunc = Any
+JSFunc: TypeAlias = Any
 
 
 class BarnesHut(TypedDict, total=False):

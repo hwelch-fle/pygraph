@@ -1,6 +1,7 @@
 from types import MappingProxyType
 from typing import (
     Any,
+    TypeAlias,
     TypedDict,
 )
 
@@ -9,7 +10,7 @@ from .node import NodeOptions
 __all__ = 'DefaultManipulationOptions', 'ManipulationOptions'
 
 
-type JSFunc = Any
+JSFunc: TypeAlias = Any
 
 
 class ManipulationOptions(TypedDict, total=False):
