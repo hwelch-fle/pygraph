@@ -26,10 +26,11 @@ def test_network_attributes():
 
 
 def test_edge_attributes():
-    e = Edge(0,0)
+    e = Edge(0, 0)
     assert_type(e.key, EdgeId)
     assert_type(e.data, EdgeRecord)
     e.set(**EdgeOptions())
+
 
 def test_node_attributes():
     n = Node(0)

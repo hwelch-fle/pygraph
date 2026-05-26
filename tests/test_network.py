@@ -11,11 +11,11 @@ from pygraph.vis.node import NodeOptions
 
 
 def test_network_init_ints(subtests: pytest.Subtests):
-    nx = Network(range(10), [(0,1), (1,2), (1,3)])
+    nx = Network(range(10), [(0, 1), (1, 2), (1, 3)])
 
     with subtests.test('Test Edge/Node containment'):
         assert 0 in nx
-        assert (0,1) in nx
+        assert (0, 1) in nx
 
     with subtests.test('Test nodes/edges property length'):
         assert len(nx.nodes) == 10
@@ -41,17 +41,17 @@ def test_network_init_strings(subtests: pytest.Subtests):
 
 
 def test_network_duplicate_prevention():
-    nx = Network([1,1,1], [(1,1), (1,1), (1,1)])
+    nx = Network([1, 1, 1], [(1, 1), (1, 1), (1, 1)])
     nx.add_nodes_from(1 for _ in range(10))
     nx.add_node(1)
     assert len(nx.nodes) == 1
-    nx.add_edges_from((1,1) for _ in range(10))
-    nx.add_edge((1,1))
+    nx.add_edges_from((1, 1) for _ in range(10))
+    nx.add_edge((1, 1))
     assert len(nx.edges) == 1
 
 
 def test_network_clear():
-    nx = Network(range(10), [(i,j) for i in range(10) for j in range(10)])
+    nx = Network(range(10), [(i, j) for i in range(10) for j in range(10)])
     assert len(nx.nodes) == 10
     assert len(nx.edges) == 100
     nx.clear()
@@ -60,7 +60,7 @@ def test_network_clear():
 
 
 def test_network_clear_edges():
-    nx = Network(range(10), [(i,j) for i in range(10) for j in range(10)])
+    nx = Network(range(10), [(i, j) for i in range(10) for j in range(10)])
     assert len(nx.nodes) == 10
     assert len(nx.edges) == 100
     nx.clear_edges()
@@ -73,16 +73,16 @@ def test_network_add_bad_edge(subtests: pytest.Subtests):
 
     with subtests.test('Test Non-Existent Nodes'):
         with pytest.raises(KeyError):
-            nx.add_edge((10,11))
+            nx.add_edge((10, 11))
 
     with subtests.test('Test Edge tuple > 2'):
         # with pytest.raises(TypeError):
-        nx.add_edge((1,2,3)) # type: ignore
+        nx.add_edge((1, 2, 3))  # type: ignore
 
 
 def test_add_edge_create_nodes():
     nx = Network()
-    nx.add_edge((1,2), create_nodes=True)
+    nx.add_edge((1, 2), create_nodes=True)
     assert len(nx.nodes) == 2
     assert 1 in nx
     assert 2 in nx
@@ -99,7 +99,7 @@ def test_add_edges_create_nodes():
 
 def test_adj_list():
     nx = Network(range(10))
-    nx.add_edges_from((0,i) for i in range(10))
+    nx.add_edges_from((0, i) for i in range(10))
     assert len(nx.adj_list(0)) == 10
     assert len(nx.adj_list(9)) == 1
 
@@ -113,7 +113,7 @@ def test_getitem(subtests: pytest.Subtests):
         )
 
     with subtests.test('Test get Edge'):
-        assert nx[0,9] == nx.graph.get_edge_data(
+        assert nx[0, 9] == nx.graph.get_edge_data(
             nx.node_map[0], nx.node_map[9]
         )
 
@@ -128,10 +128,10 @@ def test_setitem(subtests: pytest.Subtests):
         assert nx[0].data.get('color') != 'UPDATED'
 
     with subtests.test('Test set Edge'):
-        nx[0,9] = EdgeOptions(color='UPDATED')
-        assert nx[0,9].data.get('color') == 'UPDATED'
-        nx[0,9].set_default('color')
-        assert nx[0,9].data.get('color') != 'UPDATED'
+        nx[0, 9] = EdgeOptions(color='UPDATED')
+        assert nx[0, 9].data.get('color') == 'UPDATED'
+        nx[0, 9].set_default('color')
+        assert nx[0, 9].data.get('color') != 'UPDATED'
 
 
 def test_delitem(subtests: pytest.Subtests):
@@ -142,12 +142,12 @@ def test_delitem(subtests: pytest.Subtests):
         del nx[0]
         assert 0 not in nx
         # associated edges should be removed too
-        assert (0,9) not in nx
+        assert (0, 9) not in nx
 
     with subtests.test('Test del Edge'):
-        assert (1,8) in nx
-        del nx[1,8]
-        assert (1,8) not in nx
+        assert (1, 8) in nx
+        del nx[1, 8]
+        assert (1, 8) not in nx
         # associated nodes remain
         assert 1 in nx
         assert 8 in nx

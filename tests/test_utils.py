@@ -6,7 +6,7 @@ import pytest
 
 from pygraph.pygraph import (
     Network,
-    _deprox,  # type: ignore
+    _deprox,  # type: ignore  # noqa: PLC2701
 )
 from pygraph.utils import (
     get_neighborhood,
@@ -33,15 +33,15 @@ def test_deprox():
 def test_shortest_paths():
     """Test that all shortest paths are discovered and contain Network edges"""
     nx = Network(range(10), [
-        (1,2), (2,4), # P1 (2 edges)
-        (1,3), (3,4), # P2 (2 edges)
+        (1, 2), (2, 4),  # P1 (2 edges)
+        (1, 3), (3, 4),  # P2 (2 edges)
     ])
     paths = shortest_paths(nx, 1, 4, directed=False)
     assert len(paths) == 2, paths
 
     # Check that both paths are found and are not the same
-    p1 = [nx[1,2], nx[2,4]]
-    p2 = [nx[1,3], nx[3,4]]
+    p1 = [nx[1, 2], nx[2, 4]]
+    p2 = [nx[1, 3], nx[3, 4]]
     assert paths[0] == p1 or paths[0] == p2
     assert paths[1] == p1 or paths[1] == p2
     assert paths[0] != paths[1]
@@ -51,8 +51,8 @@ def test_neighborhood(subtests: pytest.Subtests):
     """Test that neighborhoods behave properly with copy flag"""
     # Create linear graph with one neigbor added per level
     nx = Network(range(10), [
-        (1,2), (2,3), (3,4), (4,5),
-        (5,6), (6,7), (7,8), (8,9),
+        (1, 2), (2, 3), (3, 4), (4, 5),
+        (5, 6), (6, 7), (7, 8), (8, 9),
     ])
 
     for n in range(5):
@@ -60,8 +60,8 @@ def test_neighborhood(subtests: pytest.Subtests):
         copy_hood = get_neighborhood(nx, 1, n, copy=True)
 
         with subtests.test(f'Test Neighborhood Size (level:{n})'):
-            assert len(ref_hood.node_map.keys()) == n+1
-            assert len(copy_hood.node_map.keys()) == n+1
+            assert len(ref_hood.node_map.keys()) == n + 1
+            assert len(copy_hood.node_map.keys()) == n + 1
 
         with subtests.test(f'Test Neighborhood Nodes (level:{n})'):
             assert ref_hood.node_map == copy_hood.node_map
@@ -79,7 +79,7 @@ def test_neighborhood(subtests: pytest.Subtests):
 
 def test_style_edges(subtests: pytest.Subtests):
     """Test that Edge styling works"""
-    nx = Network(range(10), [(1,2), (1,3), (1,4)])
+    nx = Network(range(10), [(1, 2), (1, 3), (1, 4)])
 
     with subtests.test('Apply Edge Style'):
         style_edges(nx.edges, color={'color': 'UPDATED'})
@@ -121,8 +121,8 @@ def test_kevin_bacon(subtests: pytest.Subtests):
     nx = Network(range(10), [
         # 0 -> 8 are not Kevin Bacon,
         # but are with all other nodes
-        (0,1), (1,2), (2,3), (3,4),
-        (4,5), (5,6), (6,7), (7,8),
+        (0, 1), (1, 2), (2, 3), (3, 4),
+        (4, 5), (5, 6), (6, 7), (7, 8),
         # 9 is not Kevin Bacon with any node
         # (9,...)
     ])
@@ -149,4 +149,3 @@ def test_kevin_bacon(subtests: pytest.Subtests):
 def test_to_html():
     """Test that the network is properly rendered as html"""
     # TODO (need deterministic templates)
-

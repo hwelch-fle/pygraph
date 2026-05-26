@@ -11,7 +11,7 @@ def test_node_init():
     assert n.key == 0
 
     with pytest.raises(TypeError):
-        n = Node(1,2) # type: ignore
+        n = Node(1, 2)  # type: ignore
 
     n = Node(1, label='Test')
     assert n['label'] == 'Test'
