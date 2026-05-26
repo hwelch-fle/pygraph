@@ -8,7 +8,7 @@ readme = "README.md"
 authors = [
     { name = "hwelch-fle", email = "hcw360@gmail.com" }
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
     "jinja2>=3.1.6",
     "rustworkx>=0.17.1",
