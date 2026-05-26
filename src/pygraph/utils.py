@@ -41,7 +41,7 @@ def shortest_paths(nx: Network, fr: Node | NodeId, to: Node | NodeId, *, directe
     fr = nx.node_map[fr.key if isinstance(fr, Node) else fr]
     to = nx.node_map[to.key if isinstance(to, Node) else to]
     shortest = rx.digraph_all_shortest_paths(
-        nx.graph, fr, to, as_undirected = not directed
+        nx.graph, fr, to, as_undirected=not directed
     )
     return [[nx[edge] for edge in itertools.pairwise(path)] for path in shortest]
 
@@ -69,7 +69,7 @@ def style_nodes(nodes: Iterable[Node], **options: Unpack[EdgeOptions]) -> list[N
     Return:
         A list of the modified edges
     """
-    return [node.set(**options) or node for node in nodes] # type: ignore
+    return [node.set(**options) or node for node in nodes]  # type: ignore
 
 
 def get_neighborhood(nx: Network, root: Node | NodeId, level: int = 1, *, copy: bool = False) -> Network:

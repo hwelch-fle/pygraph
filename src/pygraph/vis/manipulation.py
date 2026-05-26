@@ -11,6 +11,7 @@ __all__ = 'DefaultManipulationOptions', 'ManipulationOptions'
 
 type JSFunc = Any
 
+
 class ManipulationOptions(TypedDict, total=False):
     enabled: bool
     initiallyActive: bool
@@ -24,8 +25,8 @@ class ManipulationOptions(TypedDict, total=False):
 
 
 DefaultControlNode: NodeOptions = {
-    'shape':'dot',
-    'size':6,
+    'shape': 'dot',
+    'size': 6,
     'color': {
         'background': '#ff0000',
         'border': '#3c3c3c',
@@ -48,4 +49,4 @@ DefaultManipulationOptions: ManipulationOptions = {
     'deleteEdge': True,
     'controlNodeStyle': DefaultControlNode
 }
-DefaultManipulationOptions = MappingProxyType(DefaultManipulationOptions) # type: ignore
+DefaultManipulationOptions = MappingProxyType(DefaultManipulationOptions)  # type: ignore

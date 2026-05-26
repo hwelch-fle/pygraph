@@ -19,4 +19,4 @@ else:
 DefaultGroupOptions: GroupOptions = {
     'useDefaultGroups': True,
 }
-DefaultGroupOptions = MappingProxyType(DefaultGroupOptions) # type: ignore
+DefaultGroupOptions = MappingProxyType(DefaultGroupOptions)  # type: ignore

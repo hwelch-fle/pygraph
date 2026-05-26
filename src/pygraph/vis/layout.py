@@ -19,6 +19,7 @@ class HierarchicalLayout(TypedDict, total=False):
     sortMethod: Literal['hubsize', 'directed']
     shakeTowards: Literal['leaves', 'roots']
 
+
 DefaultHierarchicalLayout: HierarchicalLayout = {
     'enabled': False,
     'levelSeparation': 150,
@@ -30,7 +31,7 @@ DefaultHierarchicalLayout: HierarchicalLayout = {
     'direction': 'UD',
     'sortMethod': 'hubsize',
 }
-DefaultHierarchicalLayout = MappingProxyType(DefaultHierarchicalLayout) # type: ignore
+DefaultHierarchicalLayout = MappingProxyType(DefaultHierarchicalLayout)  # type: ignore
 
 
 class LayoutOptions(TypedDict, total=False):
@@ -39,9 +40,10 @@ class LayoutOptions(TypedDict, total=False):
     clusterThreshold: int
     hierarchical: HierarchicalLayout | bool
 
+
 DefaultLayoutOptions: LayoutOptions = {
     'improvedLayout': True,
     'clusterThreshold': 150,
     'hierarchical': DefaultHierarchicalLayout,
 }
-DefaultLayoutOptions = MappingProxyType(DefaultLayoutOptions) # type: ignore
+DefaultLayoutOptions = MappingProxyType(DefaultLayoutOptions)  # type: ignore

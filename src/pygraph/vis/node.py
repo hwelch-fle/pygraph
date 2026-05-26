@@ -29,28 +29,31 @@ class Chosen(TypedDict, total=False):
     node: bool | JSFunc
     label: bool | JSFunc
 
+
 DefaultChosen: Chosen = {}
-DefaultChosen = MappingProxyType(DefaultChosen) # type: ignore
+DefaultChosen = MappingProxyType(DefaultChosen)  # type: ignore
 
 
 class Highlight(TypedDict, total=False):
     border: HexColor
     background: HexColor
 
+
 DefaultHighlight: Highlight = {
     'border': '#2B7CE9',
     'background': '#D2E5FF',
 }
-DefaultHighlight = MappingProxyType(DefaultHighlight) # type: ignore
+DefaultHighlight = MappingProxyType(DefaultHighlight)  # type: ignore
 
 
 class Hover(Highlight): ...
+
 
 DefaultHover: Hover = {
     'border': '#2B7CE9',
     'background': '#D2E5FF',
 }
-DefaultHover = MappingProxyType(DefaultHover) # type: ignore
+DefaultHover = MappingProxyType(DefaultHover)  # type: ignore
 
 
 class Color(TypedDict, total=False):
@@ -59,34 +62,37 @@ class Color(TypedDict, total=False):
     highlight: Highlight
     hover: Hover
 
+
 DefaultColor: Color = {
     'border': '#2B7CE9',
     'background': '#D2E5FF',
     'highlight': DefaultHighlight,
     'hover': DefaultHover,
 }
-DefaultColor = MappingProxyType(DefaultColor) # type: ignore
+DefaultColor = MappingProxyType(DefaultColor)  # type: ignore
 
 
 class Fixed(TypedDict, total=False):
     x: bool
     y: bool
 
+
 DefaultFixed: Fixed = {
     'x': False,
     'y': False,
 }
-DefaultFixed = MappingProxyType(DefaultFixed) # type: ignore
+DefaultFixed = MappingProxyType(DefaultFixed)  # type: ignore
 
 
 class HeightConstraint(TypedDict, total=False):
     minimum: int
     valign: Literal['top', 'middle', 'bottom']
 
+
 DefaultHeightConstraint: HeightConstraint = {
     'valign': 'middle',
 }
-DefaultHeightConstraint = MappingProxyType(DefaultHeightConstraint) # type: ignore
+DefaultHeightConstraint = MappingProxyType(DefaultHeightConstraint)  # type: ignore
 
 
 class Icon(TypedDict, total=False):
@@ -96,20 +102,22 @@ class Icon(TypedDict, total=False):
     color: HexColor
     weight: str | int
 
+
 DefaultIcon: Icon = {
     'face': 'FontAwesome',
     'size': 50,
     'color': '#2B7CE9',
 }
-DefaultIcon = MappingProxyType(DefaultIcon) # type: ignore
+DefaultIcon = MappingProxyType(DefaultIcon)  # type: ignore
 
 
 class Image(TypedDict, total=False):
     unselected: str
     selected: str
 
+
 DefaultImage: Image = {}
-DefaultImage = MappingProxyType(DefaultImage) # type: ignore
+DefaultImage = MappingProxyType(DefaultImage)  # type: ignore
 
 
 class Margin(TypedDict, total=False):
@@ -118,16 +126,18 @@ class Margin(TypedDict, total=False):
     left: int
     right: int
 
+
 DefaultMargin: Margin = {
     'top': 5,
     'bottom': 5,
     'left': 5,
     'right': 5,
 }
-DefaultMargin = MappingProxyType(DefaultMargin) # type: ignore
+DefaultMargin = MappingProxyType(DefaultMargin)  # type: ignore
 
 
 class ImagePadding(Margin, total=False): ...
+
 
 DefaultImagePadding: ImagePadding = {
     'top': 0,
@@ -135,7 +145,7 @@ DefaultImagePadding: ImagePadding = {
     'left': 0,
     'right': 0,
 }
-DefaultImagePadding = MappingProxyType(DefaultImagePadding) # type: ignore
+DefaultImagePadding = MappingProxyType(DefaultImagePadding)  # type: ignore
 
 
 class ShapeProperties(TypedDict, total=False):
@@ -146,6 +156,7 @@ class ShapeProperties(TypedDict, total=False):
     useBorderWithImage: bool
     coordinateOrigin: Literal['center', 'top-left']
 
+
 DefaultShapeProperties: ShapeProperties = {
     'borderDashes': False,
     'borderRadius': 6,
@@ -154,7 +165,7 @@ DefaultShapeProperties: ShapeProperties = {
     'useBorderWithImage': False,
     'coordinateOrigin': 'center',
 }
-DefaultShapeProperties = MappingProxyType(DefaultShapeProperties) # type: ignore
+DefaultShapeProperties = MappingProxyType(DefaultShapeProperties)  # type: ignore
 
 
 class NodeOptions(TypedDict, total=False):
@@ -166,7 +177,7 @@ class NodeOptions(TypedDict, total=False):
     ctxRenderer: JSFunc
     opacity: float
     fixed: Fixed | bool
-    font: Font | str | bool # ?
+    font: Font | str | bool  # ?
     group: str
     heightConstraint: HeightConstraint | int | bool
     hidden: bool
@@ -217,7 +228,7 @@ DefaultNodeOptions: NodeOptions = {
     'size': 50,
     'widthConstraint': False,
 }
-DefaultNodeOptions = MappingProxyType(DefaultNodeOptions) # type: ignore
+DefaultNodeOptions = MappingProxyType(DefaultNodeOptions)  # type: ignore
 
 
 class NodeRecord(NodeOptions):
