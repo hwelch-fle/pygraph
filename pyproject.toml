@@ -75,4 +75,5 @@ combine-as-imports = true
 
 [tool.ruff.format]
 quote-style = "single"
-
+docstring-code-format = true
+indent-style = "space"
