@@ -1,0 +1,33 @@
+{% with tables = jinja.get("tables", {}) %}
+<table id="data-table-bottom" class="display" style="width:100%">
+    <thead>
+        {% if "bottom" in tables and "columns" in tables["bottom"] %}
+        <tr>
+            {% for col in tables["bottom"]["columns"] -%}
+            <th>{{ col.get("label", col["field"]) if isinstance(col, dict) else col }}</th>
+            {% endfor %}
+        </tr>
+        {% endif %}
+    </thead>
+    <tbody>
+        {% if "bottom" in tables and "columns" in tables["bottom"] and "data" in tables["bottom"] %}
+        {% for row in tables["bottom"]["data"] -%}
+        <tr>
+            {% for col in tables["bottom"]["columns"] -%}
+            <td>{{ row[col["field"] if isinstance(col, dict) else col] }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+        {% endif %}
+    </tbody>
+    <tfoot>
+        {% if "bottom" in tables and "columns" in tables["bottom"] %}
+        <tr>
+            {% for col in tables["bottom"]["columns"] -%}
+            <th>{{ col.get("label", col["field"]) if isinstance(col, dict) else col }}</th>
+            {% endfor %}
+        </tr>
+        {% endif %}
+    </tfoot>
+</table>
+{% endwith %}

@@ -1,0 +1,24 @@
+{% with filtering = jinja.get("filtering", None) %}
+<select id="select-all-fields" class="form-select" data-placeholder="You can filter network here...">
+    <option value="ALL,ALL,ALL">All values</option>
+    {% if "edges_lookup" in filtering %}
+    {% for field in filtering["edges_lookup"] %}
+    <optgroup label="edge.{{field}}">
+    {% for val in filtering["edges_lookup"][field] -%}
+        <option value="edge,{{ field }},{{ val }}">{{ val }}</option>
+    {% endfor %}
+    </optgroup>
+    {% endfor %}
+    {% endif %}
+
+    {% if "nodes_lookup" in filtering %}
+    {% for field in filtering["nodes_lookup"] %}
+    <optgroup label="node.{{field}}">
+    {% for val in filtering["nodes_lookup"][field] -%}
+        <option value="node,{{ field }},{{ val }}">{{ val }}</option>
+    {% endfor %}
+    </optgroup>
+    {% endfor %}
+    {% endif %}
+</select>
+{% endwith %}
