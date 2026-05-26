@@ -1,8 +1,11 @@
-from string import ascii_letters, ascii_lowercase
+from string import (
+    ascii_letters,
+    ascii_lowercase,
+)
 
 import pytest
-from src.pygraph import Network
 
+from pygraph import Network
 from pygraph.vis.edge import EdgeOptions
 from pygraph.vis.node import NodeOptions
 

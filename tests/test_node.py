@@ -1,5 +1,6 @@
 import pytest
-from src.pygraph import Node
+
+from pygraph import Node
 
 
 def test_node_init():
