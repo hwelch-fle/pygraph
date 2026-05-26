@@ -238,14 +238,7 @@ class Network:
         e = e if isinstance(e, Edge) else Edge(*e[:2])
 
         if create_nodes:
-            node_map.update(
-                {
-                    n: new
-                    for n in e.key
-                    if n not in node_map
-                    and (new := self.add_node(n))
-                }
-            )
+            node_map.update(dict(zip(e.key, self.add_nodes_from(e.key), strict=True)))
 
         if e not in self:
             return self.graph.add_edge(node_map[e['from']], node_map[e['to']], e)

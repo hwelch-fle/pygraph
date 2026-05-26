@@ -1,5 +1,6 @@
 import pytest
-from src.pygraph import Edge
+
+from pygraph import Edge
 
 
 def test_edge_init():
