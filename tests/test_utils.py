@@ -6,7 +6,7 @@ import pytest
 
 from pygraph.pygraph import (
     Network,
-    _deprox,  # type: ignore  # noqa: PLC2701
+    _deprox as deprox,  # noqa: PLC2701 # type: ignore
 )
 from pygraph.utils import (
     get_neighborhood,
@@ -25,7 +25,7 @@ def test_deprox():
             assert not isinstance(v, MappingProxyType)
             if issubclass(type(v), Mapping):
                 assert_no_proxy(v)
-    assert_no_proxy(_deprox(DefaultNetworkOptions))
+    assert_no_proxy(deprox(DefaultNetworkOptions))
     with pytest.raises(AssertionError):
         assert_no_proxy(DefaultNetworkOptions)
 
