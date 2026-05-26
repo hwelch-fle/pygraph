@@ -1,8 +1,11 @@
 from types import MappingProxyType
-from typing import Any, Literal, TypedDict
+from typing import (
+    Any,
+    Literal,
+    TypedDict,
+)
 
-
-__all__ = 'PhysicsOptions', 'DefaultPhysicsOptions'
+__all__ = 'DefaultPhysicsOptions', 'PhysicsOptions'
 
 
 type JSFunc = Any
@@ -113,7 +116,7 @@ class PhysicsOptions(TypedDict, total=False):
     timestep: float
     adaptiveTimestep: bool
     wind: Wind | JSFunc
-    
+
 DefaultPhysicsOptions: PhysicsOptions = {
     'enabled': True,
     'barnesHut': DefaultBarnesHut,

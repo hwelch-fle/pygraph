@@ -1,17 +1,43 @@
 from types import MappingProxyType
-from typing import TypedDict, TYPE_CHECKING
+from typing import (
+    TYPE_CHECKING,
+    TypedDict,
+)
 
-from .configuration import Configuration, DefaultConfiguration
-from .edge import EdgeOptions, DefaultEdgeOptions, EdgeRecord as EdgeRecord
-from .group import GroupOptions, DefaultGroupOptions
-from .interaction import InteractionOptions, DefaultInteractionOptions
-from .layout import LayoutOptions, DefaultLayoutOptions
-from .manipulation import ManipulationOptions, DefaultManipulationOptions
-from .node import NodeOptions, DefaultNodeOptions, NodeRecord as NodeRecord
-from .physics import PhysicsOptions, DefaultPhysicsOptions
+from .configuration import (
+    Configuration,
+    DefaultConfiguration,
+)
+from .edge import (
+    DefaultEdgeOptions,
+    EdgeOptions,
+)
+from .group import (
+    DefaultGroupOptions,
+    GroupOptions,
+)
+from .interaction import (
+    DefaultInteractionOptions,
+    InteractionOptions,
+)
+from .layout import (
+    DefaultLayoutOptions,
+    LayoutOptions,
+)
+from .manipulation import (
+    DefaultManipulationOptions,
+    ManipulationOptions,
+)
+from .node import (
+    DefaultNodeOptions,
+    NodeOptions,
+)
+from .physics import (
+    DefaultPhysicsOptions,
+    PhysicsOptions,
+)
 
-
-__all__ = 'NetworkOptions', 'DefaultNetworkOptions'
+__all__ = 'DefaultNetworkOptions', 'NetworkOptions'
 
 
 if TYPE_CHECKING:

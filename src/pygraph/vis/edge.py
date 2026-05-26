@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from typing import Any, Literal, NotRequired, TypedDict
 from types import MappingProxyType
+from typing import (
+    Any,
+    Literal,
+    NotRequired,
+    TypedDict,
+)
 
-
-__all__ = 'EdgeOptions', 'EdgeRecord', 'DefaultEdgeOptions'
+__all__ = 'DefaultEdgeOptions', 'EdgeOptions', 'EdgeRecord'
 
 
 # Color types for disambiguation of which colorstrings are allowed
@@ -27,7 +31,7 @@ class Arrow(TypedDict, total=False):
     scaleFactor: float
     src: str
     type: Literal['arrow', 'bar', 'circle', 'image']
-    
+
 DefaultArrow: Arrow = {
     'enabled': False,
     'scaleFactor': 1.0,
@@ -94,7 +98,7 @@ DefaultColor: Color = {
     'inherit': 'from',
     'opacity': 1.0,
 }
-DefaultColor = MappingProxyType(DefaultColor) # type: ignore 
+DefaultColor = MappingProxyType(DefaultColor) # type: ignore
 
 
 class FontClass(TypedDict, total=False):
@@ -222,7 +226,7 @@ class SelfReference(TypedDict, total=False):
     size: int
     angle: float
     renderBehindTheNode: bool
-    
+
 DefaultSelfReference: SelfReference = {
     'size': 20,
     'angle': 0.7853981633974483, # pi/4 rad
@@ -237,7 +241,7 @@ class Shadow(TypedDict, total=False):
     size: int
     x: int
     y: int
-    
+
 DefaultShadow: Shadow = {
     'enabled': False,
     'color': 'rgba(0,0,0,0.5)',
@@ -250,7 +254,7 @@ DefaultShadow = MappingProxyType(DefaultShadow) # type: ignore
 
 class Smoothing(TypedDict, total=False):
     enabled: bool
-    type: Literal['dynamic', 'continuous', 'discrete', 'diagonalCross', 'straightCross', 
+    type: Literal['dynamic', 'continuous', 'discrete', 'diagonalCross', 'straightCross',
                   'horizontal', 'vertical', 'curvedCW', 'curvedCCW', 'cubicBezier']
     forceDirection: bool | Literal['horizontal', 'vertical', 'none']
     roundness: float
@@ -265,10 +269,10 @@ DefaultSmoothing = MappingProxyType(DefaultSmoothing) # type: ignore
 
 class WidthConstraint(TypedDict, total=False):
     maximum: int
-    
+
 DefaultWidthConstraint: WidthConstraint = {}
 DefaultWidthConstraint = MappingProxyType(DefaultWidthConstraint) # type: ignore
-   
+
 class EdgeOptions(TypedDict, total=False):
     arrows: Arrows | str
     endPointOffset: ArrowOffset
@@ -327,4 +331,3 @@ _Edge = TypedDict(
 # Final edge definition
 class EdgeRecord(_Edge, EdgeOptions):
     id: NotRequired[str]
-    

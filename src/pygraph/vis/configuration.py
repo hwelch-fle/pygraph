@@ -1,5 +1,7 @@
-from typing import Any, TypedDict
-
+from typing import (
+    Any,
+    TypedDict,
+)
 
 __all__ = 'Configuration', 'DefaultConfiguration'
 

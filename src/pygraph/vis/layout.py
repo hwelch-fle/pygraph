@@ -1,8 +1,10 @@
-from typing import Literal, TypedDict
 from types import MappingProxyType
+from typing import (
+    Literal,
+    TypedDict,
+)
 
-
-__all__ = 'LayoutOptions', 'DefaultLayoutOptions'
+__all__ = 'DefaultLayoutOptions', 'LayoutOptions'
 
 
 class HierarchicalLayout(TypedDict, total=False):
@@ -36,7 +38,7 @@ class LayoutOptions(TypedDict, total=False):
     improvedLayout: bool
     clusterThreshold: int
     hierarchical: HierarchicalLayout | bool
-    
+
 DefaultLayoutOptions: LayoutOptions = {
     'improvedLayout': True,
     'clusterThreshold': 150,
