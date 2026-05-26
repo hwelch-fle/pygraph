@@ -6,7 +6,7 @@ import pytest
 
 from pygraph.pygraph import (
     Network,
-    _deprox as deprox,  # noqa: PLC2701 # type: ignore
+    deprox,
 )
 from pygraph.utils import (
     get_neighborhood,

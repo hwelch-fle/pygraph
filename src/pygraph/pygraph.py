@@ -60,12 +60,12 @@ type EdgeId = tuple[NodeId, NodeId]
 # Helper to de proxy the defaults
 # types are all wrong becuase we're lying about what the Default*
 # dicts are since MappingProxyType will clear all TypedDict hinting
-def _deprox[T: Mapping[str, Any]](o: T) -> T:
+def deprox[T: Mapping[str, Any]](o: T) -> T:
     """INTERNAL: Used to turn nested MappingProxyTypes into a dict"""
     deproxed: T = {}      # type: ignore
     for k, v in o.items():
         deproxed[k] = (   # type: ignore
-            _deprox(v)    # type: ignore
+            deprox(v)     # type: ignore
             if isinstance(v, (dict, MappingProxyType))
             else v
         )
@@ -80,7 +80,7 @@ class Node:
         self.data: NodeRecord = {'id': id, 'label': kwargs.get('label') or str(id)}
         self._is_custom = self.__defaults__ is not DefaultNodeOptions
         if self._is_custom:
-            self.data.update(_deprox(self.__defaults__))  # type: ignore
+            self.data.update(deprox(self.__defaults__))  # type: ignore
         self.data.update(kwargs)  # type: ignore
 
     def __getitem__(self, key: str) -> Any:
@@ -113,7 +113,7 @@ class Node:
         if key_filter:
             defaults = {k: v for k, v in self.__defaults__.items() if k in key_filter}
         else:
-            defaults = _deprox(self.__defaults__)
+            defaults = deprox(self.__defaults__)
         if self._is_custom:
             self.data.update(defaults)  # type: ignore
         else:
@@ -138,7 +138,7 @@ class Edge:
             self.data['id'] = id
         self._is_custom = self.__defaults__ is not DefaultEdgeOptions
         if self._is_custom:
-            self.data.update(_deprox(self.__defaults__))  # type: ignore
+            self.data.update(deprox(self.__defaults__))  # type: ignore
         self.data.update(kwargs)  # type: ignore
 
     def __getitem__(self, key: str) -> Any:
@@ -171,7 +171,7 @@ class Edge:
         if key_filter:
             defaults = {k: v for k, v in self.__defaults__.items() if k in key_filter}
         else:
-            defaults = _deprox(self.__defaults__)
+            defaults = deprox(self.__defaults__)
         if self._is_custom:
             self.data.update(defaults)  # type: ignore
         else:
@@ -205,7 +205,7 @@ class Network:
                  es: Iterable[Edge | EdgeId] | None = None,
                  **kwargs: Unpack[NetworkOptions]
         ) -> None:
-        self.options = _deprox(DefaultNetworkOptions)
+        self.options = deprox(DefaultNetworkOptions)
         self.options.update(kwargs)
         self.graph = rx.PyDiGraph()
         self.add_nodes_from(ns or [])
