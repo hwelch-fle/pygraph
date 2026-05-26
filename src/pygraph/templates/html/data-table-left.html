@@ -1,0 +1,33 @@
+{% with tables = jinja.get("tables", {}) %}
+<table id="data-table-left" class="display" style="width:100%">
+    <thead>
+        {% if "left" in tables and "columns" in tables["left"] %}
+        <tr>
+            {% for col in tables["left"]["columns"] -%}
+            <th>{{ col.get("label", col["field"]) if isinstance(col, dict) else col }}</th>
+            {% endfor %}
+        </tr>
+        {% endif %}
+    </thead>
+    <tbody>
+        {% if "left" in tables and "columns" in tables["left"] and "data" in tables["left"] %}
+        {% for edge in tables["left"]["data"] if edge["table"] == "left" -%}
+        <tr>
+            {% for col in tables["left"]["columns"] -%}
+            <td>{{ edge[col["field"] if isinstance(col, dict) else col] }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+        {% endif %}
+    </tbody>
+    <tfoot>
+        {% if "left" in tables and "columns" in tables["left"] %}
+        <tr>
+            {% for col in tables["left"]["columns"] -%}
+            <th>{{ col.get("label", col["field"]) if isinstance(col, dict) else col }}</th>
+            {% endfor %}
+        </tr>
+        {% endif %}
+    </tfoot>
+</table>
+{% endwith %}

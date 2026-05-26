@@ -1,0 +1,109 @@
+{#
+    Required:
+        {
+            'tables': 
+        }
+#}
+
+{% extends "base-template.html" -%}
+{% block title -%}pygraph{% endblock -%}
+{% block head_scripts -%}
+    {{ super() }}
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous"/>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
+
+    {% if "filtering" in jinja -%}
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    {% endif %}
+
+    {% if "tables" in jinja -%}
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <link href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css" rel="stylesheet">
+    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
+    {% endif %}
+
+    {% if "sankey" in jinja -%}
+	<script src='https://cdn.plot.ly/plotly-2.32.0.min.js'></script>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js'></script>
+    {% endif %}
+
+{% endblock -%}
+{% block head_style %}
+    {{ super() }}
+
+    html, body { height: 100%; margin: 0; }
+    .container { display: flex; flex-direction: column; height: 100vh; }
+    .row.flex-grow-1 { flex-grow: 1; }
+    {% if "filtering" in jinja -%}
+    .option { font-weight: normal; }
+    .optgroup { font-weight: bold; }
+    {% endif %}
+    {% if "tables" in jinja -%}
+    .display { font-family: 'JetBrains Mono'; font-size: 12px; }
+    {% endif %}
+{% endblock %}
+
+
+{% block content -%}
+    {{ super() }}
+    <div class="container">
+        {% if "filtering" in jinja -%}
+        <div class="row">
+            <div class="col">
+                {% include "select-edge-filter.html" -%}
+            </div>
+        </div>
+        {% endif %}
+        <div class="row flex-grow-1">
+            <div class="col">
+                <div id="pygraph"></div>
+            </div>
+        </div>
+        {% with tables = jinja.get("tables", None) -%}
+        {% if tables -%}
+        <div class="row">
+            {% if "left" in tables %}
+            <div class="col">
+                {% include "data-table-left.html" -%}
+            </div>
+            {% endif %}
+            {% if "right" in tables %}
+            <div class="col">
+                {% include "data-table-right.html" -%}
+            </div>
+            {% endif %}
+        </div>
+        {% if "bottom" in tables %}
+        <div class="row">
+            <div class="col">
+                {% include "data-table-bottom.html" -%}
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+        {% endwith %}
+        {% if "sankey" in jinja -%}
+        <div class="row">
+            <div class="col">
+                <div id='sankeyDiv'><!-- Plotly chart will be drawn inside this DIV --></div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    {{ super() }}
+    {% if "filtering" in jinja -%}
+    {% include "../js/init_tomSelect.js" %}
+    {% endif %}
+    {% include "../js/draw_title.js" %}
+    {% if "tables" in jinja -%}
+    {% include "../js/init_dataTables.js" %}
+    {% endif %}
+    {% if "sankey" in jinja -%}
+    {% include "../js/init_sankey.js" %}
+    {% endif %}
+{% endblock %}
