@@ -12,6 +12,7 @@ class Configuration(TypedDict, total=False):
     container: Any
     showButton: bool
 
+
 DefaultConfiguration: Configuration = {
     'enabled': True,
     'filter': True,

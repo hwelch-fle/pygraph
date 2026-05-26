@@ -62,6 +62,7 @@ class NetworkOptions(TypedDict, total=False):
     manipulation: ManipulationOptions
     physics: PhysicsOptions
 
+
 DefaultNetworkOptions: NetworkOptions = {
     'autoResize': True,
     'width': '100%',
@@ -78,4 +79,4 @@ DefaultNetworkOptions: NetworkOptions = {
     'manipulation': DefaultManipulationOptions,
     'physics': DefaultPhysicsOptions,
 }
-DefaultNetworkOptions = MappingProxyType(DefaultNetworkOptions) # type: ignore
+DefaultNetworkOptions = MappingProxyType(DefaultNetworkOptions)  # type: ignore

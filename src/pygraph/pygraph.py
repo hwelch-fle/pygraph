@@ -63,7 +63,7 @@ type EdgeId = tuple[NodeId, NodeId]
 def _deprox[T: Mapping[str, Any]](o: T) -> T:
     """INTERNAL: Used to turn nested MappingProxyTypes into a dict"""
     deproxed: T = {}      # type: ignore
-    for k,v in o.items():
+    for k, v in o.items():
         deproxed[k] = (   # type: ignore
             _deprox(v)    # type: ignore
             if isinstance(v, (dict, MappingProxyType))
@@ -80,11 +80,11 @@ class Node:
         self.data: NodeRecord = {'id': id, 'label': kwargs.get('label') or str(id)}
         self._is_custom = self.__defaults__ is not DefaultNodeOptions
         if self._is_custom:
-            self.data.update(_deprox(self.__defaults__)) # type: ignore
-        self.data.update(kwargs) # type: ignore
+            self.data.update(_deprox(self.__defaults__))  # type: ignore
+        self.data.update(kwargs)  # type: ignore
 
     def __getitem__(self, key: str) -> Any:
-        return self.data[key] # type: ignore
+        return self.data[key]  # type: ignore
 
     def __setitem__(self, key: str, value: Any) -> None:
         self.data[key] = value
@@ -99,33 +99,34 @@ class Node:
         return (
             f'{self.__class__.__name__}('
             f'id={self.data['id']}, '
-            f'data=<{sorted(set(self.data.keys())-{'id'})}>)'
+            f'data=<{sorted(set(self.data.keys()) - {'id'})}>)'
         )
 
     @property
     def key(self) -> NodeId:
         return self.data['id']
 
-    def to_json(self, indent: int=2, sort_keys: bool=True) -> str:
+    def to_json(self, indent: int = 2, sort_keys: bool = True) -> str:
         return json.dumps(self.data, indent=indent, sort_keys=sort_keys)
 
     def set_default(self, *key_filter: str) -> None:
         if key_filter:
-            defaults = {k:v for k,v in self.__defaults__.items() if k in key_filter}
+            defaults = {k: v for k, v in self.__defaults__.items() if k in key_filter}
         else:
             defaults = _deprox(self.__defaults__)
         if self._is_custom:
-            self.data.update(defaults) # type: ignore
+            self.data.update(defaults)  # type: ignore
         else:
             for k in defaults:
                 self.data.pop(k, None)
 
     def set(self, **options: Unpack[NodeOptions]) -> None:
-        self.data.update(options) # type: ignore
+        self.data.update(options)  # type: ignore
 
     @classmethod
     def set_node_defaults(cls, defaults: NodeOptions) -> None:
         cls.__defaults__ = defaults
+
 
 class Edge:
     __defaults__ = DefaultEdgeOptions
@@ -137,11 +138,11 @@ class Edge:
             self.data['id'] = id
         self._is_custom = self.__defaults__ is not DefaultEdgeOptions
         if self._is_custom:
-            self.data.update(_deprox(self.__defaults__)) # type: ignore
-        self.data.update(kwargs) # type: ignore
+            self.data.update(_deprox(self.__defaults__))  # type: ignore
+        self.data.update(kwargs)  # type: ignore
 
     def __getitem__(self, key: str) -> Any:
-        return self.data[key] # type: ignore
+        return self.data[key]  # type: ignore
 
     def __setitem__(self, key: str, value: Any) -> None:
         self.data[key] = value
@@ -156,33 +157,34 @@ class Edge:
         return (
             f'{self.__class__.__name__}('
             f'from={self.data['from']}, to={self.data['to']}, '
-            f'data=<{sorted(set(self.data.keys())-{'from', 'to'})}>)'
+            f'data=<{sorted(set(self.data.keys()) - {'from', 'to'})}>)'
         )
 
     @property
     def key(self) -> EdgeId:
         return (self.data['from'], self.data['to'])
 
-    def to_json(self, indent: int=2, sort_keys: bool=True) -> str:
+    def to_json(self, indent: int = 2, sort_keys: bool = True) -> str:
         return json.dumps(self.data, indent=indent, sort_keys=sort_keys)
 
     def set_default(self, *key_filter: str) -> None:
         if key_filter:
-            defaults = {k:v for k,v in self.__defaults__.items() if k in key_filter}
+            defaults = {k: v for k, v in self.__defaults__.items() if k in key_filter}
         else:
             defaults = _deprox(self.__defaults__)
         if self._is_custom:
-            self.data.update(defaults) # type: ignore
+            self.data.update(defaults)  # type: ignore
         else:
             for k in defaults:
                 self.data.pop(k, None)
 
     def set(self, **options: Unpack[EdgeOptions]) -> None:
-        self.data.update(options) # type: ignore
+        self.data.update(options)  # type: ignore
 
     @classmethod
     def set_edge_defaults(cls, defaults: EdgeOptions) -> None:
         cls.__defaults__ = defaults
+
 
 class NetworkData(TypedDict):
     """Serialized json data required for creating visjs Network objects.
@@ -222,13 +224,19 @@ class Network:
 
     @property
     def node_map(self) -> dict[NodeId, int]:
-        _idxs = self.graph.node_indices()
-        return {n.key:i for n,i in zip(self.nodes, _idxs, strict=True)}
+        return {
+            n.key: i
+            for n, i
+            in zip(self.nodes, self.graph.node_indices(), strict=True)
+        }
 
     @property
     def edge_map(self) -> dict[EdgeId, int]:
-        _idxs = self.graph.edge_indices()
-        return {e.key:i for e,i in zip(self.edges, _idxs, strict=True)}
+        return {
+            e.key: i
+            for e, i
+            in zip(self.edges, self.graph.edge_indices(), strict=True)
+        }
 
     # Graph Manipulators
 
@@ -316,7 +324,7 @@ class Network:
 
         if isinstance(key, (str, int)):
             return self.graph[self.node_map[key]]
-        elif isinstance(key, tuple) and len(key) == 2: # type: ignore
+        elif isinstance(key, tuple) and len(key) == 2:  # type: ignore
             return self.graph.get_edge_data_by_index(self.edge_map[key])
 
         raise KeyError(f'Invalid Edge/Node Id: {type(key)}:{key}')
@@ -340,7 +348,7 @@ class Network:
 
         if isinstance(key, (str, int)):
             self[key].data.update(value)
-        elif isinstance(key, tuple) and len(key) == 2: # type: ignore
+        elif isinstance(key, tuple) and len(key) == 2:  # type: ignore
             self[key].data.update(value)
         else:
             raise KeyError(f'Invalid Edge/Node Id: {key}')
@@ -351,7 +359,7 @@ class Network:
 
         if isinstance(item, (str, int)):
             self.graph.remove_node(self.node_map[item])
-        elif isinstance(item, tuple) and len(item) == 2: # type: ignore
+        elif isinstance(item, tuple) and len(item) == 2:  # type: ignore
             self.graph.remove_edge_from_index(self.edge_map[item])
         else:
             raise KeyError(f'Invalid Edge/Node Id: {type(item)}:{item}')
@@ -361,7 +369,7 @@ class Network:
 
         if isinstance(item, (str, int)):
             return item in self.node_map
-        elif isinstance(item, tuple) and len(item) == 2: # type: ignore
+        elif isinstance(item, tuple) and len(item) == 2:  # type: ignore
             return item in self.edge_map
 
         return False

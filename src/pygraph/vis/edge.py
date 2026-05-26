@@ -32,12 +32,13 @@ class Arrow(TypedDict, total=False):
     src: str
     type: Literal['arrow', 'bar', 'circle', 'image']
 
+
 DefaultArrow: Arrow = {
     'enabled': False,
     'scaleFactor': 1.0,
     'type': 'arrow',
 }
-DefaultArrow = MappingProxyType(DefaultArrow) # type: ignore
+DefaultArrow = MappingProxyType(DefaultArrow)  # type: ignore
 
 
 Arrows = TypedDict(
@@ -55,7 +56,7 @@ DefaultArrows: Arrows = {
     'middle': DefaultArrow,
     'from': DefaultArrow,
 }
-DefaultArrows = MappingProxyType(DefaultArrows) # type: ignore
+DefaultArrows = MappingProxyType(DefaultArrows)  # type: ignore
 
 
 ArrowOffset = TypedDict(
@@ -73,15 +74,16 @@ DefaultArrowOffset: ArrowOffset = {
     'from': 0.0,
     'arrowStrikethrough': True,
 }
-DefaultArrow = MappingProxyType(DefaultArrow) # type: ignore
+DefaultArrow = MappingProxyType(DefaultArrow)  # type: ignore
 
 
 class Chosen(TypedDict, total=False):
     edge: bool | Any
     label: bool | Any
 
+
 DefaultChosen: Chosen = {}
-DefaultChosen = MappingProxyType(DefaultChosen) # type: ignore
+DefaultChosen = MappingProxyType(DefaultChosen)  # type: ignore
 
 
 class Color(TypedDict, total=False):
@@ -91,6 +93,7 @@ class Color(TypedDict, total=False):
     inherit: bool | Literal['from', 'to', 'both']
     opacity: float
 
+
 DefaultColor: Color = {
     'color': '#848484',
     'highlight': '#848484',
@@ -98,7 +101,7 @@ DefaultColor: Color = {
     'inherit': 'from',
     'opacity': 1.0,
 }
-DefaultColor = MappingProxyType(DefaultColor) # type: ignore
+DefaultColor = MappingProxyType(DefaultColor)  # type: ignore
 
 
 class FontClass(TypedDict, total=False):
@@ -108,6 +111,7 @@ class FontClass(TypedDict, total=False):
     mod: str
     vadjust: int
 
+
 DefaultBoldFont: FontClass = {
     'color': '#343434',
     'size': 14,
@@ -115,7 +119,7 @@ DefaultBoldFont: FontClass = {
     'mod': 'bold',
     'vadjust': 0,
 }
-DefaultBoldFont = MappingProxyType(DefaultBoldFont) # type: ignore
+DefaultBoldFont = MappingProxyType(DefaultBoldFont)  # type: ignore
 
 DefaultItalFont: FontClass = {
     'color': '#343434',
@@ -124,7 +128,7 @@ DefaultItalFont: FontClass = {
     'mod': 'ital',
     'vadjust': 0,
 }
-DefaultItalFont = MappingProxyType(DefaultItalFont) # type: ignore
+DefaultItalFont = MappingProxyType(DefaultItalFont)  # type: ignore
 
 DefaultBoldItalFont: FontClass = {
     'color': '#343434',
@@ -133,7 +137,7 @@ DefaultBoldItalFont: FontClass = {
     'mod': 'bold',
     'vadjust': 0,
 }
-DefaultBoldItalFont = MappingProxyType(DefaultBoldItalFont) # type: ignore
+DefaultBoldItalFont = MappingProxyType(DefaultBoldItalFont)  # type: ignore
 
 DefaultMonoFont: FontClass = {
     'color': '#343434',
@@ -142,7 +146,7 @@ DefaultMonoFont: FontClass = {
     'mod': '',
     'vadjust': 2,
 }
-DefaultMonoFont = MappingProxyType(DefaultMonoFont) # type: ignore
+DefaultMonoFont = MappingProxyType(DefaultMonoFont)  # type: ignore
 
 
 class Font(TypedDict, total=False):
@@ -160,6 +164,7 @@ class Font(TypedDict, total=False):
     boldital: FontClass | bool | str
     mono: FontClass | bool | str
 
+
 DefaultFont: Font = {
     'color': '#343434',
     'size': 14,
@@ -174,7 +179,7 @@ DefaultFont: Font = {
     'boldital': False,
     'mono': False,
 }
-DefaultFont = MappingProxyType(DefaultFont) # type: ignore
+DefaultFont = MappingProxyType(DefaultFont)  # type: ignore
 
 
 class Label(TypedDict, total=False):
@@ -184,6 +189,7 @@ class Label(TypedDict, total=False):
     maxVisible: int
     drawThreshold: int
 
+
 DefaultLabel: Label = {
     'enabled': False,
     'min': 14,
@@ -191,7 +197,7 @@ DefaultLabel: Label = {
     'maxVisible': 30,
     'drawThreshold': 5,
 }
-DefaultLabel = MappingProxyType(DefaultLabel) # type: ignore
+DefaultLabel = MappingProxyType(DefaultLabel)  # type: ignore
 
 
 class Scaling(TypedDict, total=False):
@@ -200,6 +206,7 @@ class Scaling(TypedDict, total=False):
     label: Label
     customScalingFunction: Any
     selectionWidth: int | Any
+
 
 # Default scaling function as a string (probably best to not set this?)
 _sfunc = """function (min,max,total,value) {
@@ -216,10 +223,10 @@ DefaultScaling: Scaling = {
     'min': 1,
     'max': 15,
     'label': DefaultLabel,
-    #'customScalingFunction': _sfunc,
+    # 'customScalingFunction': _sfunc,
     'selectionWidth': 1,
 }
-DefaultScaling = MappingProxyType(DefaultScaling) # type: ignore
+DefaultScaling = MappingProxyType(DefaultScaling)  # type: ignore
 
 
 class SelfReference(TypedDict, total=False):
@@ -227,12 +234,13 @@ class SelfReference(TypedDict, total=False):
     angle: float
     renderBehindTheNode: bool
 
+
 DefaultSelfReference: SelfReference = {
     'size': 20,
-    'angle': 0.7853981633974483, # pi/4 rad
+    'angle': 0.7853981633974483,  # pi/4 rad
     'renderBehindTheNode': True,
 }
-DefaultSelfReference = MappingProxyType(DefaultSelfReference) # type: ignore
+DefaultSelfReference = MappingProxyType(DefaultSelfReference)  # type: ignore
 
 
 class Shadow(TypedDict, total=False):
@@ -242,6 +250,7 @@ class Shadow(TypedDict, total=False):
     x: int
     y: int
 
+
 DefaultShadow: Shadow = {
     'enabled': False,
     'color': 'rgba(0,0,0,0.5)',
@@ -249,7 +258,7 @@ DefaultShadow: Shadow = {
     'x': 5,
     'y': 5,
 }
-DefaultShadow = MappingProxyType(DefaultShadow) # type: ignore
+DefaultShadow = MappingProxyType(DefaultShadow)  # type: ignore
 
 
 class Smoothing(TypedDict, total=False):
@@ -259,19 +268,23 @@ class Smoothing(TypedDict, total=False):
     forceDirection: bool | Literal['horizontal', 'vertical', 'none']
     roundness: float
 
+
 DefaultSmoothing: Smoothing = {
     'enabled': True,
     'type': 'dynamic',
     'forceDirection': False,
     'roundness': 0.5,
 }
-DefaultSmoothing = MappingProxyType(DefaultSmoothing) # type: ignore
+DefaultSmoothing = MappingProxyType(DefaultSmoothing)  # type: ignore
+
 
 class WidthConstraint(TypedDict, total=False):
     maximum: int
 
+
 DefaultWidthConstraint: WidthConstraint = {}
-DefaultWidthConstraint = MappingProxyType(DefaultWidthConstraint) # type: ignore
+DefaultWidthConstraint = MappingProxyType(DefaultWidthConstraint)  # type: ignore
+
 
 class EdgeOptions(TypedDict, total=False):
     arrows: Arrows | str
@@ -289,7 +302,7 @@ class EdgeOptions(TypedDict, total=False):
     physics: bool
     scaling: Scaling
     selectionWidth: int | JSFunc
-    #selfReferenceSize: None #deprecated
+    # selfReferenceSize: None #deprecated
     selfReference: SelfReference
     shadow: Shadow | bool
     smooth: Smoothing | bool
@@ -297,6 +310,7 @@ class EdgeOptions(TypedDict, total=False):
     value: float
     width: int
     widthConstraint: WidthConstraint | int | bool
+
 
 DefaultEdgeOptions: EdgeOptions = {
     'arrows': DefaultArrows,
@@ -318,7 +332,7 @@ DefaultEdgeOptions: EdgeOptions = {
     'width': 1,
     'widthConstraint': False,
 }
-DefaultEdgeOptions = MappingProxyType(DefaultEdgeOptions) # type: ignore
+DefaultEdgeOptions = MappingProxyType(DefaultEdgeOptions)  # type: ignore
 
 _Edge = TypedDict(
     '_Edge',
@@ -327,6 +341,7 @@ _Edge = TypedDict(
         'to': int | str,
     },
 )
+
 
 # Final edge definition
 class EdgeRecord(_Edge, EdgeOptions):

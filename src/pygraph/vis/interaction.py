@@ -9,12 +9,14 @@ class Speed(TypedDict, total=False):
     y: int
     zoom: float
 
+
 DefaultSpeed: Speed = {
     'x': 1,
     'y': 1,
     'zoom': 0.02,
 }
-DefaultSpeed = MappingProxyType(DefaultSpeed) # type: ignore
+DefaultSpeed = MappingProxyType(DefaultSpeed)  # type: ignore
+
 
 class KeyboardInteraction(TypedDict, total=False):
     enabled: bool
@@ -22,13 +24,15 @@ class KeyboardInteraction(TypedDict, total=False):
     bindToWindow: bool
     autoFocus: bool
 
+
 DefaultKeyboardInteraction: KeyboardInteraction = {
     'enabled': False,
     'speed': DefaultSpeed,
     'bindToWindow': True,
     'autoFocus': True,
 }
-DefaultKeyboardInteraction = MappingProxyType(DefaultKeyboardInteraction) # type: ignore
+DefaultKeyboardInteraction = MappingProxyType(DefaultKeyboardInteraction)  # type: ignore
+
 
 class InteractionOptions(TypedDict, total=False):
     dragNodes: bool
@@ -47,6 +51,7 @@ class InteractionOptions(TypedDict, total=False):
     zoomSpeed: int
     zoomView: bool
 
+
 DefaultInteractionOptions: InteractionOptions = {
     'dragNodes': True,
     'dragView': True,
@@ -64,4 +69,4 @@ DefaultInteractionOptions: InteractionOptions = {
     'zoomSpeed': 1,
     'zoomView': True,
 }
-DefaultInteractionOptions = MappingProxyType(DefaultInteractionOptions) # type: ignore
+DefaultInteractionOptions = MappingProxyType(DefaultInteractionOptions)  # type: ignore
