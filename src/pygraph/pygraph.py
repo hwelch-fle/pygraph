@@ -191,9 +191,9 @@ class NetworkData(TypedDict):
 
     Returned by `Network.to_data` and can be used in jinja HTML templates
     """
-    nodes: str
-    edges: str
-    options: str
+    nodes: list[NodeRecord]
+    edges: list[EdgeRecord]
+    options: NetworkOptions
 
 
 class Network:
@@ -448,9 +448,12 @@ class Network:
 
         return self.graph.to_dot(node_attr, edge_attr, graph_attr)
 
-    def get_data(self) -> NetworkData:
+    def to_json(self, *, indent: int = 2, sort_keys: bool = True, **kwargs: Any) -> str:
+        return json.dumps(self.to_dict(), indent=indent, sort_keys=sort_keys, **kwargs)
+
+    def to_dict(self) -> NetworkData:
         return {
-            'nodes': json.dumps([n.data for n in self.nodes]),
-            'edges': json.dumps([e.data for e in self.edges]),
-            'options': json.dumps(self.options),
+            'nodes': [n.data for n in self.nodes],
+            'edges': [e.data for e in self.edges],
+            'options': self.options,
         }
