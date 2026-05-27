@@ -198,7 +198,7 @@ class NetworkData(TypedDict):
 
 class Network:
     __defaults__ = DefaultNetworkOptions
-    __slots__ = '_directed', 'graph', 'options'
+    __slots__ = 'graph', 'options'
 
     def __init__(self,
                  ns: Iterable[Node | NodeId] | None = None,
@@ -210,7 +210,6 @@ class Network:
         self.graph = rx.PyDiGraph()
         self.add_nodes_from(ns or [])
         self.add_edges_from(es or [])
-        self._directed = False
 
     # Graph Properties
 
