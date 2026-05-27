@@ -22,7 +22,7 @@ def test_network_attributes():
     assert_type(nx.node_map, dict[NodeId, int])
     assert_type(nx.edge_map, dict[EdgeId, int])
     assert_type(nx.options, NetworkOptions)
-    assert_type(nx.get_data(), NetworkData)
+    assert_type(nx.to_dict(), NetworkData)
 
 
 def test_edge_attributes():
