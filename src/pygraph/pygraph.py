@@ -239,64 +239,84 @@ class Network:
 
     # Graph Manipulators
 
+    def _cast_edge(self, e: Edge | EdgeId) -> Edge:
+        return e if isinstance(e, Edge) else Edge(*e[:2])
+
+    def _cast_node(self, n: Node | NodeId) -> Node:
+        return n if isinstance(n, Node) else Node(n)
+
+    def _extract_nodes(self, es: Iterable[Edge]) -> Iterable[Node]:
+        yield from (self._cast_node(n) for e in es for n in e.key)
+
     def add_edge(self, e: Edge | EdgeId, *, create_nodes: bool = False) -> int | None:
+        if e in self:
+            return
+
         node_map = self.node_map
-        # Cast to Edge
-        e = e if isinstance(e, Edge) else Edge(*e[:2])
+        e = self._cast_edge(e)
+        fr, to = e.key
 
         if create_nodes:
             node_map.update(dict(zip(e.key, self.add_nodes_from(e.key), strict=True)))
 
-        if e not in self:
-            return self.graph.add_edge(node_map[e['from']], node_map[e['to']], e)
+        return self.graph.add_edge(node_map[fr], node_map[to], e)
 
     def add_node(self, n: Node | NodeId) -> int | None:
-        # Cast to Node
-        n = n if isinstance(n, Node) else Node(n)
-        if n not in self:
-            return self.graph.add_node(n)
+        if n in self:
+            return
+
+        return self.graph.add_node(self._cast_node(n))
 
     def add_edges_from(self, es: Iterable[Edge | EdgeId], *, create_nodes: bool = False) -> list[int]:
-        node_map = self.node_map
-        existing = set[EdgeId](self.edge_map)
+        existing = set(self.edge_map.keys())
+        es = tuple(self._cast_edge(e) for e in es if e not in existing)
 
         if create_nodes:
-            # Store es since it could be a generator/iterator
-            es = [e if isinstance(e, Edge) else Edge(*e[:2]) for e in es]
-            self.add_nodes_from(
-                n for e in es for n in e.key if n not in node_map
-            )
-            node_map = self.node_map
+            self.add_nodes_from(self._extract_nodes(es))
 
+        node_map = self.node_map
         return self.graph.add_edges_from(
-            (node_map[e['from']], node_map[e['to']], e) for _ in es
-            # Cast to Edge
-            if ((e := _) and isinstance(e, Edge))
-            or ((e := Edge(*e))
-            # Prevent Duplicate
-            and e.key not in existing
-            and existing.add(e.key) is None)
+            (node_map[key[0]], node_map[key[1]], edge)
+            for edge in map(self._cast_edge, es)
+            if (key := edge.key)
+            and key not in existing
+            and existing.add(key) is None
         )
 
     def add_nodes_from(self, ns: Iterable[Node | NodeId]) -> list[int]:
-        existing = set[NodeId](self.node_map)
+        existing = set(self.node_map)
+
         return list(
             self.graph.add_nodes_from(
-                n for _ in ns
-                # Cast to Node
-                if ((n := _) and isinstance(n, Node))
-                or ((n := Node(n))
-                # Prevent Duplicate
-                and n.key not in existing
-                and existing.add(n.key) is None)
+                node for node in map(self._cast_node, ns)
+                if node.key not in existing
+                and existing.add(node.key) is None
             )
         )
 
-    def remove_node(self, n: Node) -> None:
-        self.graph.remove_node(self.node_map[n.key])
+    def remove_node(self, n: Node, *, retain_edges: bool = False) -> None:
+        if retain_edges:
+            self.graph.remove_node_retain_edges(self.node_map[n.key])
+        else:
+            self.graph.remove_node(self.node_map[n.key])
+
+    def remove_nodes_from(self, ns: Iterable[Node]) -> None:
+        node_map = self.node_map
+        self.graph.remove_nodes_from(
+            node_map[n.key] for n in map(self._cast_node, ns)
+        )
 
     def remove_edge(self, e: Edge) -> None:
-        self.graph.remove_edge_from_index(self.edge_map[e.key])
+        edge_map = self.edge_map
+        if e.key not in edge_map:
+            return
+        self.graph.remove_edge_from_index(edge_map[e.key])
+
+    def remove_edges_from(self, es: Iterable[Edge]) -> None:
+        node_map = self.node_map
+        self.graph.remove_edges_from(
+            (node_map[e.key[0]], node_map[e.key[1]]) for e in map(self._cast_edge, es)
+        )
 
     def clear(self) -> None:
         self.graph.clear()
@@ -307,7 +327,7 @@ class Network:
     def adj_list(self, node: Node | NodeId) -> dict[Node, Edge]:
         node = node.key if isinstance(node, Node) else node
         adj = self.graph.adj(self.node_map[node])
-        return {self[nd]: adj[nd] for nd in adj}
+        return {self.graph[nd]: adj[nd] for nd in adj}
 
     # Dunder Overrides
 
