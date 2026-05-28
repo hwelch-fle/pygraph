@@ -7,6 +7,7 @@ from typing import (
 
 # Same options as Edge
 from .edge import (
+    # DefaultFont,
     DefaultScaling,
     DefaultShadow,
     Font,
@@ -177,7 +178,7 @@ class NodeOptions(TypedDict, total=False):
     ctxRenderer: JSFunc
     opacity: float
     fixed: Fixed | bool
-    font: Font | str | bool  # ?
+    font: Font | str
     group: str
     heightConstraint: HeightConstraint | int | bool
     hidden: bool
@@ -212,7 +213,7 @@ DefaultNodeOptions: NodeOptions = {
     'borderWidthSelected': 2,
     'chosen': DefaultChosen,
     'color': DefaultColor,
-    'font': False,
+    # 'font': DefaultFont,
     'heightConstraint': False,
     'hidden': False,
     'icon': DefaultIcon,

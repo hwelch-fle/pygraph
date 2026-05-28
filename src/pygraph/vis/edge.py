@@ -64,7 +64,6 @@ ArrowOffset = TypedDict(
     {
         'to': float,
         'from': float,
-        'arrowStrikethrough': bool,
     },
     total=False
 )
@@ -72,7 +71,6 @@ ArrowOffset = TypedDict(
 DefaultArrowOffset: ArrowOffset = {
     'to': 0.0,
     'from': 0.0,
-    'arrowStrikethrough': True,
 }
 DefaultArrow = MappingProxyType(DefaultArrow)  # type: ignore
 
@@ -174,10 +172,10 @@ DefaultFont: Font = {
     'align': 'horizontal',
     'vadjust': 0,
     'multi': False,
-    'bold': False,
-    'ital': False,
-    'boldital': False,
-    'mono': False,
+    # 'bold': False,
+    # 'ital': False,
+    # 'boldital': False,
+    # 'mono': False,
 }
 DefaultFont = MappingProxyType(DefaultFont)  # type: ignore
 
@@ -205,7 +203,6 @@ class Scaling(TypedDict, total=False):
     max: int
     label: Label
     customScalingFunction: Any
-    selectionWidth: int | Any
 
 
 # Default scaling function as a string (probably best to not set this?)
@@ -224,7 +221,6 @@ DefaultScaling: Scaling = {
     'max': 15,
     'label': DefaultLabel,
     # 'customScalingFunction': _sfunc,
-    'selectionWidth': 1,
 }
 DefaultScaling = MappingProxyType(DefaultScaling)  # type: ignore
 
@@ -319,7 +315,7 @@ DefaultEdgeOptions: EdgeOptions = {
     'chosen': DefaultChosen,
     'color': DefaultColor,
     'dashes': False,
-    'font': DefaultFont,
+    # 'font': DefaultFont,
     'hidden': False,
     'hoverWidth': 0.5,
     'labelHighlightBold': True,
