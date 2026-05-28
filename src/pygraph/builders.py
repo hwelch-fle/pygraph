@@ -1,5 +1,7 @@
 import fnmatch
 import hashlib
+import subprocess  # noqa: S404
+import tempfile
 from collections.abc import (
     Iterable,
     Mapping,
@@ -8,6 +10,7 @@ from copy import deepcopy
 from functools import cached_property
 from pathlib import Path
 from typing import (
+    Any,
     Literal,
     Protocol,
     TypedDict,
@@ -25,6 +28,7 @@ from pygraph.vis import (
     NetworkOptions,
     NodeOptions,
 )
+from pygraph.vis.node import Color, Icon
 
 
 @runtime_checkable
@@ -41,7 +45,14 @@ class Builder(Protocol):
     def nodes(self) -> list[Node]: ...
     @property
     def edges(self) -> list[Edge]: ...
-    def network(self, **options: Unpack[NetworkOptions]) -> Network: ...
+    def network(self, *args: Any, **kwargs: Any) -> Network: ...
+
+
+def _get_git(url: str) -> Path:
+    repo = f'{url.rsplit('/', maxsplit=1)[-1].replace('.git', '')}'
+    tmp = tempfile.TemporaryDirectory(prefix=f'{repo}_', delete=False)
+    subprocess.run(['git', 'clone', url, tmp.name])
+    return Path(tmp.name)
 
 
 class _ExcludeOpts(TypedDict, total=False):
@@ -56,10 +67,12 @@ class DirectoryBuilder:
         self,
         root: Path | str,
         *,
-        file_colors: dict[str, str] | None = None,
+        file_colors: dict[str, Color | str] | None = None,
+        file_icons: dict[str, Icon] | None = None,
         edge_options: EdgeOptions | None = None,
         file_node_options: NodeOptions | None = None,
         dir_node_options: NodeOptions | None = None,
+        root_node_options: NodeOptions | None = None,
         network_options: NetworkOptions | None = None,
         file_node_size: Literal['filesize', 'linecount'] | None = None,
         dir_node_size: Literal['filesize', 'filecount'] | None = None,
@@ -67,18 +80,35 @@ class DirectoryBuilder:
         verbose: bool = False,
     ) -> None:
         """..."""
-        self.root = Path(root)
+        self.repo = None
+        self.username = None
+        if isinstance(root, str) and root.startswith('http'):
+            parts = root.rsplit('/', maxsplit=2)
+            self.repo = parts[-1].replace('.git', '')
+            self.username = parts[-2]
+            root = _get_git(root)
+        self.root = Path(root).resolve()
+        self.repo = self.repo or self.root.name
         self.file_colors = file_colors or {}
-        self.network_options = network_options or {'edges': {'arrows': 'to', 'color': {'inherit': 'from'}}}
+        self.file_icons = file_icons or {}
+        self.network_options = network_options or {'edges': {'arrows': 'to', 'color': {'inherit': 'to'}}}
         self.edge_options = edge_options or {}
-        self.dir_node_options = dir_node_options or {'shape': 'database'}
+        self.dir_node_options = dir_node_options or {'shape': 'image'}
         self.file_node_options = file_node_options or {'shape': 'box'}
+        self.root_node_options = root_node_options or {'shape': 'star'}
         self.file_node_size = file_node_size
         self.dir_node_size = dir_node_size
         self.ignores = set(self._parse_ignores(ignores))
         self.verbose = verbose
+        self.network_options['groups'] = {'useDefaultGroups': False}
+        if dir_node_options:
+            self.network_options['groups']['directory'] = dir_node_options
+        if file_node_options:
+            self.network_options['groups']['file'] = file_node_options
 
     def _read_ignore_file(self, ig: Path) -> list[str]:
+        if not ig.is_absolute():
+            ig = self.root / ig
         if not ig.is_file() or not ig.exists():
             raise ValueError(f'Path object: {ig} does not exist or is not a file.')
 
@@ -102,7 +132,7 @@ class DirectoryBuilder:
                     match_strings.extend(self._parse_ignores(ig))
             case Mapping():
                 for fl in ignores.get('files', []):
-                    match_strings.extend(self._parse_ignores(fl))
+                    match_strings.extend(self._parse_ignores(Path(fl)))
                 for pat in ignores.get('patterns', []):
                     match_strings.extend(self._parse_ignores(pat))
             case _:
@@ -126,7 +156,7 @@ class DirectoryBuilder:
                     return sum(1 for _ in lns)
         return 0
 
-    def _file_color(self, fl: Path) -> str:
+    def _file_color(self, fl: Path) -> str | Color:
         if not fl.is_file():
             return ''
         fl_typ = '.'.join(fl.suffixes)
@@ -134,6 +164,12 @@ class DirectoryBuilder:
             self.file_colors.get(fl_typ) or
             f'#{hashlib.md5(fl_typ.encode('utf-8')).hexdigest()[:6]}'  # noqa: S324
         )
+
+    def _file_icon(self, fl: Path) -> Icon:
+        if not fl.is_file():
+            return {}
+        fl_typ = '.'.join(fl.suffixes)
+        return self.file_icons.get(fl_typ) or {}
 
     def _ignore(self, fl: Path) -> bool:
         posix = fl.as_posix()
@@ -145,35 +181,48 @@ class DirectoryBuilder:
     def _dir_parts(self, dir: Path) -> tuple[Node, Edge] | None:
         dir_stat = dir.stat()
         parent_stat = dir.parent.stat()
-        d_opts = deepcopy(self.dir_node_options)
+        d_opts: NodeOptions = {}
         d_opts.update({'label': dir.name})
+        if self.dir_node_options:
+            d_opts.update({'group': 'directory'})
         if self.dir_node_size is not None:
             d_opts['size'] = self._size(dir)
         return (
-            Node(dir_stat.st_ino, **d_opts),
-            Edge(parent_stat.st_ino, dir_stat.st_ino, **self.edge_options)
+            Node(str(dir_stat.st_ino), **d_opts),
+            Edge(str(parent_stat.st_ino), str(dir_stat.st_ino), **self.edge_options)
         )
 
     def _file_parts(self, fl: Path) -> tuple[Node, Edge] | None:
         fl_stat = fl.stat()
-        f_opts = deepcopy(self.file_node_options)
-        fl_clr = self._file_color(fl)
-        f_opts.update({'color': fl_clr, 'label': fl.name})
+        f_opts: NodeOptions = {'label': fl.name, 'title': f'{fl.as_uri()}'}
+        if self.file_icons and (fl_icon := self._file_icon(fl)):
+            f_opts.update({'icon': fl_icon})
+            if 'color' not in fl_icon:
+                fl_clr = self._file_color(fl)
+                fl_clr = fl_clr if isinstance(fl_clr, str) else fl_clr.get('background')
+                if fl_clr:
+                    assert 'icon' in f_opts
+                    f_opts['icon']['color'] = fl_clr
+        else:
+            f_opts.update({'color': self._file_color(fl)})
+        if self.file_node_options:
+            f_opts.update({'group': 'file'})
         if self.file_node_size is not None:
             f_opts['size'] = self._size(fl)
         return (
-            Node(fl_stat.st_ino, **f_opts),
-            Edge(fl.parent.stat().st_ino, fl_stat.st_ino, **self.edge_options),
+            Node(str(fl_stat.st_ino), **f_opts),
+            Edge(str(fl.parent.stat().st_ino), str(fl_stat.st_ino), **self.edge_options),
         )
 
     def _walk(self) -> Iterable[tuple[Node, Edge]]:
         self.refresh()
-        for root, _, files in self.root.walk(top_down=False):
+        for root, _, files in self.root.walk(top_down=True):
             root = root.resolve()
             if self._ignore(root):
                 continue
             res = self._dir_parts(root)
             if res:
+                res[0].data['level'] = len(root.relative_to(self.root).parts)
                 yield res
             for fl in files:
                 fl = (root / fl).resolve()
@@ -181,6 +230,7 @@ class DirectoryBuilder:
                     continue
                 res = self._file_parts(fl)
                 if res:
+                    res[0].data['level'] = len(fl.relative_to(self.root).parts)
                     yield res
 
     @cached_property
@@ -218,7 +268,12 @@ class DirectoryBuilder:
         edges = deepcopy(self.edges)
         nx.add_nodes_from(nodes)
         nx.add_edges_from(edges)
-        nx[self.root.stat().st_ino].data.update({'shape': 'star'})
+        root_id = str(self.root.stat().st_ino)
+        r_node = nx[root_id].data
+        r_opts = deepcopy(self.root_node_options)
+        r_opts.update(r_node)
+        nx[root_id].set(**r_node)
+        nx[root_id].data['level'] = 0
         return nx
 
     def refresh(self) -> None:
@@ -226,3 +281,27 @@ class DirectoryBuilder:
             del self.data
         except AttributeError:
             pass
+
+
+class GithubBuilder(DirectoryBuilder):
+    def network(  # type: ignore (additional args needed)
+        self,
+        username: str | None = None,
+        repo: str | None = None,
+        branch: str = 'main',
+        **options: Unpack[NetworkOptions],
+    ) -> Network:
+        nw = super().network(**options)
+        repo = repo or self.repo
+        username = username or self.username
+        for node in nw.nodes:
+            if 'title' in node.data:
+                pth = Path(node.data['title'].replace('file:///', '')).resolve()
+                if pth == self.root:
+                    node.data['title'] = f'https://github.com/{username}/{repo}'
+                    node.data['label'] = str(repo)
+                    node.set(**self.root_node_options)
+                else:
+                    rel = pth.relative_to(self.root, walk_up=True).as_posix()
+                    node.data['title'] = f'https://github.com/{username}/{repo}/tree/{branch}/{rel}'
+        return nw
