@@ -80,6 +80,8 @@ class DirectoryBuilder:
         verbose: bool = False,
     ) -> None:
         """..."""
+
+        # Parse github URL or Filepath
         self.repo = None
         self.username = None
         if isinstance(root, str) and root.startswith('http'):
@@ -87,24 +89,37 @@ class DirectoryBuilder:
             self.repo = parts[-1].replace('.git', '')
             self.username = parts[-2]
             root = _get_git(root)
+        else:
+            self.repo = self.root.name
         self.root = Path(root).resolve()
-        self.repo = self.repo or self.root.name
+
+        # Default options
         self.file_colors = file_colors or {}
         self.file_icons = file_icons or {}
         self.network_options = network_options or {'edges': {'arrows': 'to', 'color': {'inherit': 'to'}}}
         self.edge_options = edge_options or {}
-        self.dir_node_options = dir_node_options or {'shape': 'image'}
-        self.file_node_options = file_node_options or {'shape': 'box'}
+        self.dir_node_options = dir_node_options or {'shape': 'dot'}
+        self.file_node_options = file_node_options or {'shape': 'square'}
         self.root_node_options = root_node_options or {'shape': 'star'}
         self.file_node_size = file_node_size
         self.dir_node_size = dir_node_size
+
+        # Parse ignores
         self.ignores = set(self._parse_ignores(ignores))
         self.verbose = verbose
         self.network_options['groups'] = {'useDefaultGroups': False}
-        if dir_node_options:
-            self.network_options['groups']['directory'] = dir_node_options
-        if file_node_options:
-            self.network_options['groups']['file'] = file_node_options
+
+        # Create style groups
+        self.network_options['groups']['directory'] = self.dir_node_options
+        self.network_options['groups']['file'] = self.file_node_options
+        self.all_groups: dict[str, Any] = {}
+        for file_extension, icon in self.file_icons.items():
+            opts = deepcopy(self.file_node_options)
+            color = icon.get('color', self.file_colors.get(file_extension, self._file_color(file_extension)))
+            color = color.get('background', '#ffffff') if not isinstance(color, str) else color
+            icon['color'] = color
+            opts.update({'shape': 'icon', 'icon': icon})
+            self.all_groups[file_extension] = opts
 
     def _read_ignore_file(self, ig: Path) -> list[str]:
         if not ig.is_absolute():
@@ -156,20 +171,8 @@ class DirectoryBuilder:
                     return sum(1 for _ in lns)
         return 0
 
-    def _file_color(self, fl: Path) -> str | Color:
-        if not fl.is_file():
-            return ''
-        fl_typ = '.'.join(fl.suffixes)
-        return (
-            self.file_colors.get(fl_typ) or
-            f'#{hashlib.md5(fl_typ.encode('utf-8')).hexdigest()[:6]}'  # noqa: S324
-        )
-
-    def _file_icon(self, fl: Path) -> Icon:
-        if not fl.is_file():
-            return {}
-        fl_typ = '.'.join(fl.suffixes)
-        return self.file_icons.get(fl_typ) or {}
+    def _file_color(self, file_extension: str) -> str:
+        return f'#{hashlib.md5(file_extension.encode('utf-8')).hexdigest()[:6]}'  # noqa: S324
 
     def _ignore(self, fl: Path) -> bool:
         posix = fl.as_posix()
@@ -195,18 +198,16 @@ class DirectoryBuilder:
     def _file_parts(self, fl: Path) -> tuple[Node, Edge] | None:
         fl_stat = fl.stat()
         f_opts: NodeOptions = {'label': fl.name, 'title': f'{fl.as_uri()}'}
-        if self.file_icons and (fl_icon := self._file_icon(fl)):
-            f_opts.update({'icon': fl_icon})
-            if 'color' not in fl_icon:
-                fl_clr = self._file_color(fl)
-                fl_clr = fl_clr if isinstance(fl_clr, str) else fl_clr.get('background')
-                if fl_clr:
-                    assert 'icon' in f_opts
-                    f_opts['icon']['color'] = fl_clr
-        else:
-            f_opts.update({'color': self._file_color(fl)})
-        if self.file_node_options:
-            f_opts.update({'group': 'file'})
+        file_extension = fl.suffix or 'file'
+
+        if file_extension not in self.network_options.get('groups', {}):
+            groups = self.network_options.setdefault('groups', {'useDefaultGroups': False})
+            if (opts := self.all_groups.get(file_extension)) is None:
+                opts = deepcopy(self.file_node_options)
+                opts.update({'color': self._file_color(file_extension)})
+            groups[file_extension] = opts
+
+        f_opts.update({'group': file_extension})
         if self.file_node_size is not None:
             f_opts['size'] = self._size(fl)
         return (
@@ -261,18 +262,15 @@ class DirectoryBuilder:
         Note:
             When called, the Node/Edge data from the Builder is deepcopied into the Network.
         """
+        nodes = deepcopy(self.nodes)
+        edges = deepcopy(self.edges)
         opts = deepcopy(self.network_options)
         opts.update(options)
         nx = Network(**opts)
-        nodes = deepcopy(self.nodes)
-        edges = deepcopy(self.edges)
         nx.add_nodes_from(nodes)
         nx.add_edges_from(edges)
         root_id = str(self.root.stat().st_ino)
-        r_node = nx[root_id].data
-        r_opts = deepcopy(self.root_node_options)
-        r_opts.update(r_node)
-        nx[root_id].set(**r_node)
+        nx[root_id].set(**self.root_node_options)
         nx[root_id].data['level'] = 0
         return nx
 
@@ -300,7 +298,6 @@ class GithubBuilder(DirectoryBuilder):
                 if pth == self.root:
                     node.data['title'] = f'https://github.com/{username}/{repo}'
                     node.data['label'] = str(repo)
-                    node.set(**self.root_node_options)
                 else:
                     rel = pth.relative_to(self.root, walk_up=True).as_posix()
                     node.data['title'] = f'https://github.com/{username}/{repo}/tree/{branch}/{rel}'
