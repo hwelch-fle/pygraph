@@ -1,43 +1,65 @@
-{#
-  Required: 
-    {
-      'data': {...},
-    }
-#}
+{# Required: { 'data': { 'nodes': [Node, ...], 'edges': [Edge, ...], 'options':
+NetworkOptions, }, 'jinja': { 'background': str, } } #}
 
 <html>
   <head>
     {% block head -%}
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}{% endblock %}</title>
     {% block head_scripts -%}
-    <link href='https://fonts.googleapis.com/css?family=JetBrains Mono' rel='stylesheet'>
-    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    
+    <!-- JetBrains Mono -->
+    <link
+      href="https://fonts.googleapis.com/css?family=JetBrains Mono"
+      rel="stylesheet"
+    />
+
+    <!-- Material Symbols -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+      rel="stylesheet"
+    />
+
+    <!-- FontAwesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+      integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <!-- Visjs-min -->
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"
+    ></script>
     {%- endblock %}
     <style type="text/css">
       {% block head_style -%}
       body {
         font-family: 'JetBrains Mono';font-size: 12px;
       }
-      #visjsnet {
-          width: {{ data["options"]["width"]|default ('100%') }};
-          height: {{ data["options"]["height"]|default ('100%') }};
+      #pygraph {
+          width: {{ data["options"]["width"] | default ('100%') }};
+          height: {{ data["options"]["height"] | default ('100%') }};
           border: 1px solid lightgray;
+          background-color:{{ jinja["background"] | default ('darkslategrey') }};
       }
       {%- endblock %}
     </style>
-  {%- endblock %}
+    {%- endblock %}
   </head>
   <body>
     {% block content -%}{%- endblock %}
     <script type="text/javascript">
-    {% block javascript %}
-    {% include "../js/create_network.js" %}
-    {% if "startAnimation" in jinja %}
-      {% include "../js/enable_startAnimation.js" %}
-    {% endif %}
-    {% endblock %}
+      {% block javascript %}
+      {% include "js/create_network.js" %}
+      {% if "startAnimation" in jinja %}
+        {% include "js/enable_startAnimation.js" %}
+      {% endif %}
+      {% endblock %}
     </script>
   </body>
 </html>
