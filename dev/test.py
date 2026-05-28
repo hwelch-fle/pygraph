@@ -7,14 +7,11 @@ from pygraph.builders import GithubBuilder
 
 env = Environment(loader=PackageLoader('pygraph'), autoescape=select_autoescape())
 builder = GithubBuilder(
-    r'https://github.com/pydantic/pydantic.git',
-    ignores={'files': ['.gitignore'], 'patterns': ['.git/']},
+    r'https://github.com/hwelch-fle/pygraph.git',
+    ignores={'files': ['.gitignore'], 'patterns': ['.git/', 'docs/']},
     dir_node_options={
         'shape': 'icon',
-        'icon': {
-            'face': 'FontAwesome',
-            'code': '\uf07b',
-        },
+        'icon': {'code': '\uf07b'},
     },
     root_node_options={
         'icon': {
@@ -29,13 +26,8 @@ builder = GithubBuilder(
     },
     file_node_options={
         'shape': 'icon',
-        'icon': {
-            'face': 'FontAwesome',
-            'code': '\uf1c9',
-        },
-        'font': {
-            'color': 'white',
-        }
+        'icon': {'code': '\uf1c9'},
+        'font': {'color': 'white'},
     },
     file_colors={
         '.js': 'green',
@@ -46,6 +38,7 @@ builder = GithubBuilder(
         '.html': 'orange',
         '.md': 'purple',
     },
+
     # Font Awesome
     file_icons={
         '.js': {'code': '\uf3b9'},
@@ -76,6 +69,8 @@ builder = GithubBuilder(
         '.pdf': {'code': '\uf1c1'},
         '.vue': {'code': '\uf41f'},
         '.rss': {'code': '\uf143'},
+        '.png': {'code': '\uf03e'},
+        '.jpg': {'code': '\uf03e'},
     },
     network_options={
         'edges': {
@@ -112,7 +107,7 @@ builder = GithubBuilder(
             'barnesHut': {
                 'avoidOverlap': 1,
                 'centralGravity': 0.1,
-                'gravitationalConstant': -8000,
+                'gravitationalConstant': -15000,
             },
         },
         'configure': {
@@ -120,7 +115,7 @@ builder = GithubBuilder(
         },
     },
 )
-nw = builder.network()
+nw = builder.network(branch='master')
 print(nw)
 data = nw.to_dict()
 out = Path(builder.root / 'out.html')
