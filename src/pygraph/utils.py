@@ -131,6 +131,6 @@ def to_html(nx: Network, template: jinja2.Template, **kwargs: Any) -> str:
     Returns:
         A string value with the HTML required to render the network
     """
-    nx_data = nx.to_dict()
+    nx_data = {'data': nx.to_dict()}
     kwargs.update(nx_data)
     return template.render(**kwargs)

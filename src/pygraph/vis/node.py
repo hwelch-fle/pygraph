@@ -1,5 +1,6 @@
 from types import MappingProxyType
 from typing import (
+    TYPE_CHECKING,
     Any,
     Literal,
     TypedDict,
@@ -169,7 +170,7 @@ DefaultShapeProperties: ShapeProperties = {
 DefaultShapeProperties = MappingProxyType(DefaultShapeProperties)  # type: ignore
 
 
-class NodeOptions(TypedDict, total=False):
+class _NodeOptions(TypedDict, total=False):
     borderWidth: int
     borderWidthSelected: int
     brokenImage: str
@@ -208,6 +209,13 @@ class NodeOptions(TypedDict, total=False):
     label: str
 
 
+if TYPE_CHECKING:
+    class NodeOptions(_NodeOptions, extra_items=Any): ...
+
+else:
+    class NodeOptions(_NodeOptions): ...
+
+
 DefaultNodeOptions: NodeOptions = {
     'borderWidth': 1,
     'borderWidthSelected': 2,
@@ -232,5 +240,5 @@ DefaultNodeOptions: NodeOptions = {
 DefaultNodeOptions = MappingProxyType(DefaultNodeOptions)  # type: ignore
 
 
-class NodeRecord(NodeOptions):
+class NodeRecord(NodeOptions):  # type: ignore
     id: int | str
