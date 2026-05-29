@@ -10,12 +10,10 @@ from copy import deepcopy
 from functools import cached_property
 from pathlib import Path
 from typing import (
-    Any,
+    ClassVar,
     Literal,
-    Protocol,
     TypedDict,
     Unpack,
-    runtime_checkable,
 )
 
 from pygraph import (
@@ -28,24 +26,8 @@ from pygraph.vis import (
     NetworkOptions,
     NodeOptions,
 )
-from pygraph.vis.node import Color, Icon
 
-
-@runtime_checkable
-class Builder(Protocol):
-    """Protocol that all Builder classes need to implement"""
-
-    def __init__(self) -> None:
-        self.network_options: NetworkOptions
-
-    @cached_property
-    def data(self) -> tuple[list[Node], list[Edge]]: ...
-    def reset(self) -> None: ...
-    @property
-    def nodes(self) -> list[Node]: ...
-    @property
-    def edges(self) -> list[Edge]: ...
-    def network(self, *args: Any, **kwargs: Any) -> Network: ...
+__all__ = 'DirectoryBuilder',
 
 
 def _get_git(url: str) -> Path:
@@ -53,6 +35,14 @@ def _get_git(url: str) -> Path:
     tmp = tempfile.TemporaryDirectory(prefix=f'{repo}_', delete=False)
     subprocess.run(['git', 'clone', url, tmp.name])
     return Path(tmp.name)
+
+
+def _get_branch(repo: Path) -> str:
+    res = subprocess.run(['git', 'branch', '--list'], cwd=repo, capture_output=True)
+    for branch in res.stdout.decode('utf-8').split('\n'):
+        if branch.startswith('*'):
+            return branch.split()[-1]
+    return 'main'
 
 
 class _ExcludeOpts(TypedDict, total=False):
@@ -63,63 +53,87 @@ class _ExcludeOpts(TypedDict, total=False):
 class DirectoryBuilder:
     """Build a Network from a Directory"""
 
+    _trees: ClassVar[dict[str, str]] = {
+        'github.com': 'tree',
+        'codeberg.org': 'src',
+    }
+
     def __init__(
         self,
         root: Path | str,
         *,
-        file_colors: dict[str, Color | str] | None = None,
-        file_icons: dict[str, Icon] | None = None,
+        file_options: NodeOptions | None = None,
+        dir_options: NodeOptions | None = None,
+        root_options: NodeOptions | None = None,
         edge_options: EdgeOptions | None = None,
-        file_node_options: NodeOptions | None = None,
-        dir_node_options: NodeOptions | None = None,
-        root_node_options: NodeOptions | None = None,
         network_options: NetworkOptions | None = None,
+        file_groups: dict[str, NodeOptions] | None = None,
         file_node_size: Literal['filesize', 'linecount'] | None = None,
         dir_node_size: Literal['filesize', 'filecount'] | None = None,
         ignores: Path | str | list[str | Path] | _ExcludeOpts | None = None,
-        verbose: bool = False,
     ) -> None:
         """..."""
 
         # Parse github URL or Filepath
-        self.repo = None
-        self.username = None
         if isinstance(root, str) and root.startswith('http'):
-            parts = root.rsplit('/', maxsplit=2)
-            self.repo = parts[-1].replace('.git', '')
-            self.username = parts[-2]
-            root = _get_git(root)
+            host, user, repo, root = self._clone_repo(root)
         else:
-            self.repo = self.root.name
-        self.root = Path(root).resolve()
+            root = Path(root).resolve()
+            host, user, repo, root = (None, None, root.name, root)
+
+        self.host = host
+        self.user = user
+        self.repo = repo
+        self.root = root
 
         # Default options
-        self.file_colors = file_colors or {}
-        self.file_icons = file_icons or {}
-        self.network_options = network_options or {'edges': {'arrows': 'to', 'color': {'inherit': 'to'}}}
+        self.network_options = network_options or {}
         self.edge_options = edge_options or {}
-        self.dir_node_options = dir_node_options or {'shape': 'dot'}
-        self.file_node_options = file_node_options or {'shape': 'square'}
-        self.root_node_options = root_node_options or {'shape': 'star'}
+        self.dir_options = dir_options or {}
+        self.file_options = file_options or {}
+        self.root_options = root_options or {}
+        self.file_groups = self._populate_groups(file_groups or {})
         self.file_node_size = file_node_size
         self.dir_node_size = dir_node_size
 
         # Parse ignores
         self.ignores = set(self._parse_ignores(ignores))
-        self.verbose = verbose
         self.network_options['groups'] = {'useDefaultGroups': False}
 
         # Create style groups
-        self.network_options['groups']['directory'] = self.dir_node_options
-        self.network_options['groups']['file'] = self.file_node_options
-        self.all_groups: dict[str, Any] = {}
-        for file_extension, icon in self.file_icons.items():
-            opts = deepcopy(self.file_node_options)
-            color = icon.get('color', self.file_colors.get(file_extension, self._file_color(file_extension)))
-            color = color.get('background', '#ffffff') if not isinstance(color, str) else color
-            icon['color'] = color
-            opts.update({'shape': 'icon', 'icon': icon})
-            self.all_groups[file_extension] = opts
+        self.network_options['groups']['directory'] = self.dir_options
+        self.network_options['groups']['file'] = self.file_options
+
+    def __repr__(self) -> str:
+        return f'{type(self).__name__}({self.repo})'
+
+    def _clone_repo(self, url: str) -> tuple[str, str, str, Path]:
+        parts = url.rsplit('/', maxsplit=3)
+        return parts[-3], parts[-2], parts[-1].removesuffix('.git'), _get_git(url)
+
+    def _populate_groups(self, groups: dict[str, NodeOptions]) -> dict[str, NodeOptions]:
+        # Pull default file options and update them with file specifics
+        for opts in groups.values():
+            temp = deepcopy(self.file_options)
+            temp.pop('color', None)  # colors are set based on extension md5 hash
+            temp.update(opts)
+            opts.update(temp)
+
+        # General transformations
+        for file_extension, opts in groups.items():
+            groups[file_extension] = opts
+
+            # If an icon is set, make sure the shape type is set to icon
+            # Also make sure that the icon gets a unique color
+            if 'icon' in opts:
+                opts['shape'] = 'icon'
+                if 'color' not in opts['icon']:
+                    opts['icon']['color'] = self._file_color(file_extension)
+
+            # If no color is set, get a unique color
+            elif 'color' not in opts:
+                opts['color'] = self._file_color(file_extension)
+        return groups
 
     def _read_ignore_file(self, ig: Path) -> list[str]:
         if not ig.is_absolute():
@@ -184,10 +198,12 @@ class DirectoryBuilder:
     def _dir_parts(self, dir: Path) -> tuple[Node, Edge] | None:
         dir_stat = dir.stat()
         parent_stat = dir.parent.stat()
-        d_opts: NodeOptions = {}
-        d_opts.update({'label': dir.name})
-        if self.dir_node_options:
-            d_opts.update({'group': 'directory'})
+        d_opts: NodeOptions = {
+            'label': dir.name if dir != self.root else self.repo,
+            'title': dir.relative_to(self.root).as_posix(),
+            'group': 'directory',
+            'link': dir.as_uri(),
+        }
         if self.dir_node_size is not None:
             d_opts['size'] = self._size(dir)
         return (
@@ -197,19 +213,19 @@ class DirectoryBuilder:
 
     def _file_parts(self, fl: Path) -> tuple[Node, Edge] | None:
         fl_stat = fl.stat()
-        f_opts: NodeOptions = {'label': fl.name, 'title': f'{fl.as_uri()}'}
-        file_extension = fl.suffix or 'file'
-
-        if file_extension not in self.network_options.get('groups', {}):
+        f_opts: NodeOptions = {
+            'label': fl.name,
+            'title': fl.relative_to(self.root).as_posix(),
+            'link': fl.as_uri(),
+            'group': fl.suffix or 'file'
+        }
+        if f_opts['group'] not in self.network_options.get('groups', {}):
             groups = self.network_options.setdefault('groups', {'useDefaultGroups': False})
-            if (opts := self.all_groups.get(file_extension)) is None:
-                opts = deepcopy(self.file_node_options)
-                opts.update({'color': self._file_color(file_extension)})
-            groups[file_extension] = opts
+            groups[f_opts['group']] = self.file_groups.get(f_opts['group'], self.file_options)
 
-        f_opts.update({'group': file_extension})
         if self.file_node_size is not None:
             f_opts['size'] = self._size(fl)
+
         return (
             Node(str(fl_stat.st_ino), **f_opts),
             Edge(str(fl.parent.stat().st_ino), str(fl_stat.st_ino), **self.edge_options),
@@ -233,6 +249,22 @@ class DirectoryBuilder:
                 if res:
                     res[0].data['level'] = len(fl.relative_to(self.root).parts)
                     yield res
+
+    def _create_link(self, node: Node, *, host: str, user: str, branch: str, tree: str) -> None:
+        # Skip nodes with no link set
+        if 'link' not in node.data or not isinstance(node.data['link'], str):
+            return
+
+        pth = Path(node.data['link'].replace('file:///', '')).resolve()
+
+        # Handle Root Node
+        if pth == self.root:
+            node.data['link'] = f'https://{host}/{user}/{self.repo}'
+            return
+
+        # Handle all child nodes
+        rel = pth.relative_to(self.root, walk_up=True).as_posix()
+        node.data['link'] = f'https://{host}/{user}/{self.repo}/{tree}/{branch}/{rel}'
 
     @cached_property
     def data(self) -> tuple[list[Node], list[Edge]]:
@@ -270,35 +302,37 @@ class DirectoryBuilder:
         nx.add_nodes_from(nodes)
         nx.add_edges_from(edges)
         root_id = str(self.root.stat().st_ino)
-        nx[root_id].set(**self.root_node_options)
+        nx[root_id].set(**self.root_options)
         nx[root_id].data['level'] = 0
         return nx
+
+    def web_network(
+        self,
+        host: str | None = None,
+        user: str | None = None,
+        branch: str | None = None,
+        tree: str | None = None,
+        **options: Unpack[NetworkOptions],
+    ) -> Network:
+        """Get a network """
+        host = host or self.host
+        user = user or self.user
+        tree = tree or self._trees.get(str(self.host), 'blob')
+        branch = branch or _get_branch(self.root)
+        if not host and user and branch and tree:
+            raise ValueError(
+                'web_network requires that a repo host and username are set '
+                f'({host=}, {user=}, {tree=}, {branch=})'
+            )
+        nw = self.network(**options)
+        for node in nw.nodes:
+            self._create_link(
+                node, host=str(host), user=str(user), branch=str(branch), tree=tree
+            )
+        return nw
 
     def refresh(self) -> None:
         try:
             del self.data
         except AttributeError:
             pass
-
-
-class GithubBuilder(DirectoryBuilder):
-    def network(  # type: ignore (additional args needed)
-        self,
-        username: str | None = None,
-        repo: str | None = None,
-        branch: str = 'main',
-        **options: Unpack[NetworkOptions],
-    ) -> Network:
-        nw = super().network(**options)
-        repo = repo or self.repo
-        username = username or self.username
-        for node in nw.nodes:
-            if 'title' in node.data:
-                pth = Path(node.data['title'].replace('file:///', '')).resolve()
-                if pth == self.root:
-                    node.data['title'] = f'https://github.com/{username}/{repo}'
-                    node.data['label'] = str(repo)
-                else:
-                    rel = pth.relative_to(self.root, walk_up=True).as_posix()
-                    node.data['title'] = f'https://github.com/{username}/{repo}/tree/{branch}/{rel}'
-        return nw

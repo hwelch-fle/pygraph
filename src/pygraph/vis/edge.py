@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from types import MappingProxyType
 from typing import (
+    TYPE_CHECKING,
     Any,
     Literal,
     NotRequired,
@@ -282,7 +283,7 @@ DefaultWidthConstraint: WidthConstraint = {}
 DefaultWidthConstraint = MappingProxyType(DefaultWidthConstraint)  # type: ignore
 
 
-class EdgeOptions(TypedDict, total=False):
+class _EdgeOptions(TypedDict, total=False):
     arrows: Arrows | str
     endPointOffset: ArrowOffset
     arrowStrikethrough: bool
@@ -306,6 +307,13 @@ class EdgeOptions(TypedDict, total=False):
     value: float
     width: int
     widthConstraint: WidthConstraint | int | bool
+
+
+if TYPE_CHECKING:
+    class EdgeOptions(_EdgeOptions, extra_items=Any): ...
+
+else:
+    class EdgeOptions(_EdgeOptions): ...
 
 
 DefaultEdgeOptions: EdgeOptions = {
@@ -340,5 +348,5 @@ _Edge = TypedDict(
 
 
 # Final edge definition
-class EdgeRecord(_Edge, EdgeOptions):
+class EdgeRecord(_Edge, EdgeOptions):  # type: ignore
     id: NotRequired[str]
