@@ -255,11 +255,12 @@ class DirectoryBuilder:
         if 'link' not in node.data or not isinstance(node.data['link'], str):
             return
 
-        pth = Path(node.data['link'].replace('file:///', '')).resolve()
+        pth = Path(node.data['link'].replace('file://', '')).resolve()
 
         # Handle Root Node
         if pth == self.root:
             node.data['link'] = f'https://{host}/{user}/{self.repo}'
+            node.data['title'] = self.repo
             return
 
         # Handle all child nodes
