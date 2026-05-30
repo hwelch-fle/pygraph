@@ -32,3 +32,7 @@ jobs:
         run: |
           uv sync --locked --all-extras --dev
           uv run pytest tests
+
+      - name: Rebuild Graph
+        run: |
+          uv run dev/build_graph.py
