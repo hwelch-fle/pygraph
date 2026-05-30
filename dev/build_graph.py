@@ -8,7 +8,7 @@ from pygraph.utils import to_html
 
 env = Environment(loader=PackageLoader('pygraph'), autoescape=select_autoescape())
 builder = DirectoryBuilder(
-    r'https://github.com/hwelch-fle/pygraph.git',
+    r'.',
     ignores={'files': ['.gitignore'], 'patterns': ['.git/']},
     dir_options={
         'shape': 'icon',
@@ -193,11 +193,9 @@ builder = DirectoryBuilder(
     },
 )
 
-nw = builder.web_network()
-print(nw)
-
+nw = builder.web_network(host='github.com', user='hwelch-fle', branch='master')
 data = nw.to_dict()
-out = Path(builder.root / f'{builder.repo}.html')
+out = Path(builder.root / 'docs' / 'ref' / 'index.html')
 template = env.get_template('html/basic-template.html')
 out.write_text(to_html(nw, template, jinja={'background': '#1f1f1f'}))
 webbrowser.open(str(out.resolve()))
