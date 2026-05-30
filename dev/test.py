@@ -8,7 +8,7 @@ from pygraph.utils import to_html
 
 env = Environment(loader=PackageLoader('pygraph'), autoescape=select_autoescape())
 builder = DirectoryBuilder(
-    r'https://github.com/plankanban/planka.git',
+    r'https://github.com/hwelch-fle/pygraph.git',
     ignores={'files': ['.gitignore'], 'patterns': ['.git/']},
     dir_options={
         'shape': 'icon',
