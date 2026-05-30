@@ -44,5 +44,5 @@ Node(0, options=['label'])
 ## Templates
 Coming Soon (Currently ships with `piyvisjs` templates, but any `jinja2` template that uses `visjs` will work)
 
-## Repo Graph (see [Interactive Graph Here](https://htmlpreview.github.io/?https://github.com/hwelch-fle/pygraph/docs/ref/pygraph-repo.html))
+## Repo Graph (see [Interactive Graph Here](https://hwelch-fle.github.io/pygraph/))
 ![Generated Graph](./docs/ref/pygraph-repo.png)
