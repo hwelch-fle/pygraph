@@ -10,6 +10,7 @@ from copy import deepcopy
 from functools import cached_property
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     ClassVar,
     Literal,
     TypedDict,
@@ -21,6 +22,13 @@ from pygraph import (
     Network,
     Node,
 )
+from pygraph.pygraph import deprox
+
+if TYPE_CHECKING:
+    from .styles.models import DirectoryBuilderOpts
+else:
+    DirectoryBuilderOpts = object
+
 from pygraph.vis import (
     EdgeOptions,
     NetworkOptions,
@@ -61,6 +69,8 @@ class DirectoryBuilder:
     def __init__(
         self,
         root: Path | str,
+        sub_path: Path | str = '',
+        style: DirectoryBuilderOpts | None = None,
         *,
         file_options: NodeOptions | None = None,
         dir_options: NodeOptions | None = None,
@@ -85,16 +95,31 @@ class DirectoryBuilder:
         self.user = user
         self.repo = repo
         self.root = root
+        self.sub_path = root / sub_path
 
-        # Default options
-        self.network_options = network_options or {}
-        self.edge_options = edge_options or {}
-        self.dir_options = dir_options or {}
-        self.file_options = file_options or {}
-        self.root_options = root_options or {}
-        self.file_groups = self._populate_groups(file_groups or {})
-        self.file_node_size = file_node_size
-        self.dir_node_size = dir_node_size
+        # Resolve base style with overrides
+        style = deprox(style) if style else {}
+        style.setdefault('file_options', {}).update(file_options or {})
+        style.setdefault('dir_options', {}).update(dir_options or {})
+        style.setdefault('root_options', {}).update(root_options or {})
+        style.setdefault('edge_options', {}).update(edge_options or {})
+        style.setdefault('network_options', {}).update(network_options or {})
+        style.setdefault('file_groups', {}).update(file_groups or {})
+        style['file_groups'] = style.get('file_groups', {})
+        style.setdefault('file_node_size', None)
+        style['file_node_size'] = file_node_size or style.get('file_node_size')
+        style.setdefault('dir_node_size', None)
+        style['dir_node_size'] = dir_node_size or style.get('dir_node_size')
+        style['ignores'] = ignores or style.get('ignores', {})
+
+        self.file_options = style.get('file_options', {})
+        self.dir_options = style.get('dir_options', {})
+        self.root_options = style.get('root_options', {})
+        self.edge_options = style.get('edge_options', {})
+        self.network_options = style.get('network_options', {})
+        self.file_groups = self._populate_groups(style.get('file_groups', {}))
+        self.file_node_size = style.get('file_node_size')
+        self.dir_node_size = style.get('dir_node_size')
 
         # Parse ignores
         self.ignores = set(self._parse_ignores(ignores))
@@ -137,7 +162,7 @@ class DirectoryBuilder:
 
     def _read_ignore_file(self, ig: Path) -> list[str]:
         if not ig.is_absolute():
-            ig = self.root / ig
+            ig = (self.root / ig).resolve()
         if not ig.is_file() or not ig.exists():
             raise ValueError(f'Path object: {ig} does not exist or is not a file.')
 
@@ -196,26 +221,35 @@ class DirectoryBuilder:
         )
 
     def _dir_parts(self, dir: Path) -> tuple[Node, Edge] | None:
-        dir_stat = dir.stat()
-        parent_stat = dir.parent.stat()
+        dir_rel = dir.relative_to(self.sub_path).as_posix()
+        parent_rel = (
+            dir.parent.relative_to(self.sub_path).as_posix()
+            if dir.parent.is_relative_to(self.sub_path)
+            else self.sub_path.relative_to(self.root).as_posix()
+        )
         d_opts: NodeOptions = {
-            'label': dir.name if dir != self.root else self.repo,
-            'title': dir.relative_to(self.root).as_posix(),
+            'label': dir.name,
+            'title': dir.as_posix(),
             'group': 'directory',
             'link': dir.as_uri(),
         }
         if self.dir_node_size is not None:
             d_opts['size'] = self._size(dir)
         return (
-            Node(str(dir_stat.st_ino), **d_opts),
-            Edge(str(parent_stat.st_ino), str(dir_stat.st_ino), **self.edge_options)
+            Node(dir_rel, **d_opts),
+            Edge(parent_rel, dir_rel, **self.edge_options)
         )
 
     def _file_parts(self, fl: Path) -> tuple[Node, Edge] | None:
-        fl_stat = fl.stat()
+        fl_rel = fl.relative_to(self.sub_path).as_posix()
+        parent_rel = (
+            fl.parent.relative_to(self.sub_path).as_posix()
+            if fl.parent.is_relative_to(self.sub_path)
+            else self.sub_path.relative_to(self.root).as_posix()
+        )
         f_opts: NodeOptions = {
             'label': fl.name,
-            'title': fl.relative_to(self.root).as_posix(),
+            'title': fl_rel,
             'link': fl.as_uri(),
             'group': fl.suffix or 'file'
         }
@@ -227,19 +261,19 @@ class DirectoryBuilder:
             f_opts['size'] = self._size(fl)
 
         return (
-            Node(str(fl_stat.st_ino), **f_opts),
-            Edge(str(fl.parent.stat().st_ino), str(fl_stat.st_ino), **self.edge_options),
+            Node(fl_rel, **f_opts),
+            Edge(parent_rel, fl_rel, **self.edge_options),
         )
 
     def _walk(self) -> Iterable[tuple[Node, Edge]]:
         self.refresh()
-        for root, _, files in self.root.walk(top_down=True):
+        for root, _, files in self.sub_path.walk(top_down=True):
             root = root.resolve()
             if self._ignore(root):
                 continue
             res = self._dir_parts(root)
             if res:
-                res[0].data['level'] = len(root.relative_to(self.root).parts)
+                res[0].data['level'] = len(root.relative_to(self.sub_path).parts)
                 yield res
             for fl in files:
                 fl = (root / fl).resolve()
@@ -247,10 +281,10 @@ class DirectoryBuilder:
                     continue
                 res = self._file_parts(fl)
                 if res:
-                    res[0].data['level'] = len(fl.relative_to(self.root).parts)
+                    res[0].data['level'] = len(fl.relative_to(self.sub_path).parts)
                     yield res
 
-    def _create_link(self, node: Node, *, host: str, user: str, branch: str, tree: str) -> None:
+    def _create_link(self, node: Node, *, host: str, user: str, repo: str, branch: str, tree: str) -> None:
         # Skip nodes with no link set
         if 'link' not in node.data or not isinstance(node.data['link'], str):
             return
@@ -258,14 +292,18 @@ class DirectoryBuilder:
         pth = Path(node.data['link'].replace('file://', '')).resolve()
 
         # Handle Root Node
-        if pth == self.root:
-            node.data['link'] = f'https://{host}/{user}/{self.repo}'
-            node.data['title'] = self.repo
+        if pth == self.sub_path:
+            if (self.sub_path != self.root) and (rel := self.sub_path.relative_to(self.root)):
+                node.data['link'] = f'https://{host}/{user}/{repo}/{tree}/{branch}/{rel}'
+                node.data['title'] = f'{repo}/{rel}'
+            else:
+                node.data['link'] = f'https://{host}/{user}/{repo}'
+                node.data['title'] = f'{repo}'
             return
 
         # Handle all child nodes
         rel = pth.relative_to(self.root, walk_up=True).as_posix()
-        node.data['link'] = f'https://{host}/{user}/{self.repo}/{tree}/{branch}/{rel}'
+        node.data['link'] = f'https://{host}/{user}/{repo}/{tree}/{branch}/{rel}'
 
     @cached_property
     def data(self) -> tuple[list[Node], list[Edge]]:
@@ -273,7 +311,8 @@ class DirectoryBuilder:
         edges = list[Edge]()
         for nd, ed in self._walk():
             nodes.append(nd)
-            edges.append(ed)
+            if len(set(ed.key)) > 1:
+                edges.append(ed)
         node_ids = {n.key for n in nodes}
         edges = [e for e in edges if all(n in node_ids for n in e.key)]
         return nodes, edges
@@ -302,7 +341,7 @@ class DirectoryBuilder:
         nx = Network(**opts)
         nx.add_nodes_from(nodes)
         nx.add_edges_from(edges)
-        root_id = str(self.root.stat().st_ino)
+        root_id = '.'
         nx[root_id].set(**self.root_options)
         nx[root_id].data['level'] = 0
         return nx
@@ -311,6 +350,7 @@ class DirectoryBuilder:
         self,
         host: str | None = None,
         user: str | None = None,
+        repo: str | None = None,
         branch: str | None = None,
         tree: str | None = None,
         **options: Unpack[NetworkOptions],
@@ -318,17 +358,23 @@ class DirectoryBuilder:
         """Get a network """
         host = host or self.host
         user = user or self.user
-        tree = tree or self._trees.get(str(self.host), 'blob')
+        repo = repo or self.repo
+        tree = tree or self._trees.get(str(host), 'blob')
         branch = branch or _get_branch(self.root)
         if not host and user and branch and tree:
             raise ValueError(
-                'web_network requires that a repo host and username are set '
-                f'({host=}, {user=}, {tree=}, {branch=})'
+                'web_network requires that a repo, user, and host are set '
+                f'({host=}, {user=}, {repo=}, {tree=}, {branch=})'
             )
         nw = self.network(**options)
         for node in nw.nodes:
             self._create_link(
-                node, host=str(host), user=str(user), branch=str(branch), tree=tree
+                node,
+                host=str(host),
+                user=str(user),
+                repo=str(repo),
+                branch=str(branch),
+                tree=tree,
             )
         return nw
 
