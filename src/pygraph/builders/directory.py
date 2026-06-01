@@ -1,6 +1,7 @@
 import fnmatch
 import hashlib
 import subprocess
+import sys
 import tempfile
 from collections.abc import (
     Iterable,
@@ -221,6 +222,8 @@ class DirectoryBuilder:
         )
 
     def _dir_parts(self, dir: Path) -> tuple[Node, Edge] | None:
+        if self._ignore(dir):
+            return
         dir_rel = dir.relative_to(self.sub_path).as_posix()
         parent_rel = (
             dir.parent.relative_to(self.sub_path).as_posix()
@@ -232,6 +235,7 @@ class DirectoryBuilder:
             'title': dir.as_posix(),
             'group': 'directory',
             'link': dir.as_uri(),
+            'level': len(dir.relative_to(self.sub_path).parts)
         }
         if self.dir_node_size is not None:
             d_opts['size'] = self._size(dir)
@@ -241,6 +245,8 @@ class DirectoryBuilder:
         )
 
     def _file_parts(self, fl: Path) -> tuple[Node, Edge] | None:
+        if self._ignore(fl):
+            return
         fl_rel = fl.relative_to(self.sub_path).as_posix()
         parent_rel = (
             fl.parent.relative_to(self.sub_path).as_posix()
@@ -251,7 +257,8 @@ class DirectoryBuilder:
             'label': fl.name,
             'title': fl_rel,
             'link': fl.as_uri(),
-            'group': fl.suffix or 'file'
+            'group': fl.suffix or 'file',
+            'level': len(fl.relative_to(self.sub_path).parts)
         }
         if f_opts['group'] not in self.network_options.get('groups', {}):
             groups = self.network_options.setdefault('groups', {'useDefaultGroups': False})
@@ -268,20 +275,10 @@ class DirectoryBuilder:
     def _walk(self) -> Iterable[tuple[Node, Edge]]:
         self.refresh()
         for root, _, files in self.sub_path.walk(top_down=True):
-            root = root.resolve()
-            if self._ignore(root):
-                continue
-            res = self._dir_parts(root)
-            if res:
-                res[0].data['level'] = len(root.relative_to(self.sub_path).parts)
+            if res := self._dir_parts(root.resolve()):
                 yield res
             for fl in files:
-                fl = (root / fl).resolve()
-                if self._ignore(fl):
-                    continue
-                res = self._file_parts(fl)
-                if res:
-                    res[0].data['level'] = len(fl.relative_to(self.sub_path).parts)
+                if res := self._file_parts((root / fl).resolve()):
                     yield res
 
     def _create_link(self, node: Node, *, host: str, user: str, repo: str, branch: str, tree: str) -> None:
@@ -289,7 +286,19 @@ class DirectoryBuilder:
         if 'link' not in node.data or not isinstance(node.data['link'], str):
             return
 
-        pth = Path(node.data['link'].replace('file://', '')).resolve()
+        # Path.resolve() will incorrectly resolve URIs that start with
+        # file:///<DRIVE>:/... as /<DRIVE>:/... on Windows, we need to
+        # check for this and strip the leading / if /<DRIVE>: is detected
+        #
+        # https://www.rfc-editor.org/rfc/rfc8089.html#appendix-E.2
+        #
+        # This issue will be resolved in upcoming versions
+        # https://discuss.python.org/t/file-uris-in-python/15600/8
+        link = node.data['link'].replace('file://', '')
+        if sys.platform == 'win32' and (link[0], link[2]) == ('/', ':'):
+            link = link[1:]
+
+        pth = Path(link).resolve()
 
         # Handle Root Node
         if pth == self.sub_path:
