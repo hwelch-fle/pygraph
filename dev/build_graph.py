@@ -6,6 +6,25 @@ from pygraph.builders import DirectoryBuilder
 from pygraph.builders.styles import GitRepoStyle
 from pygraph.utils import to_html
 
+HANDLERS: list[str] = []
+
+HANDLERS.append(
+"""on('doubleClick', function (event) {
+    const node = network.body.data.nodes.get(event.nodes[0]);
+    if (node) { window.open(node.link) };
+});
+""")
+
+HANDLERS.append(
+"""on('hoverNode', function(event) {
+    const node = network.body.data.nodes.get(event.nodes[0]);
+    var frame = document.createElement('iframe')
+    document.body.appendChild(iframe)
+    iframe.contentWindow.open()
+    iframe.contentWindow.document.write(html)
+});"""
+)
+
 
 def main():
     env = Environment(loader=PackageLoader('pygraph'), autoescape=select_autoescape())
@@ -19,7 +38,7 @@ def main():
     print(nw)
     out = Path('docs/ref/index.html')
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(to_html(nw, template, jinja={'background': '#1f1f1f'}))
+    out.write_text(to_html(nw, template, jinja={'background': '#1f1f1f'}, pygraph={'handlers': HANDLERS}))
 
 
 if __name__ == '__main__':
