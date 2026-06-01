@@ -56,9 +56,6 @@ NetworkOptions, }, 'jinja': { 'background': str, } } #}
     <script type="text/javascript">
       {% block javascript %}
       {% include "js/create_network.js" %}
-      {% if "startAnimation" in jinja %}
-        {% include "js/enable_startAnimation.js" %}
-      {% endif %}
       {% endblock %}
     </script>
   </body>
