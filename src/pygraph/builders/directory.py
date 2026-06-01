@@ -81,6 +81,8 @@ class DirectoryBuilder:
         file_groups: dict[str, NodeOptions] | None = None,
         file_node_size: Literal['filesize', 'linecount'] | None = None,
         dir_node_size: Literal['filesize', 'filecount'] | None = None,
+        max_size: int | None = 500,
+        min_size: int | None = 50,
         ignores: Path | str | list[str | Path] | _ExcludeOpts | None = None,
     ) -> None:
         """..."""
@@ -121,6 +123,8 @@ class DirectoryBuilder:
         self.file_groups = self._populate_groups(style.get('file_groups', {}))
         self.file_node_size = style.get('file_node_size')
         self.dir_node_size = style.get('dir_node_size')
+        self.max_size = max_size or sys.maxsize
+        self.min_size = min_size or 1
 
         # Parse ignores
         self.ignores = set(self._parse_ignores(ignores))
@@ -207,8 +211,11 @@ class DirectoryBuilder:
             if self.file_node_size == 'filesize':
                 return pth.stat().st_size
             else:
-                with pth.open('rt') as lns:
-                    return sum(1 for _ in lns)
+                try:
+                    with pth.open('rt', newline='\n') as lns:
+                        return sum(1 for _ in lns)
+                except UnicodeDecodeError:
+                    return pth.stat().st_size
         return 0
 
     def _file_color(self, file_extension: str) -> str:
@@ -238,7 +245,7 @@ class DirectoryBuilder:
             'level': len(dir.relative_to(self.sub_path).parts)
         }
         if self.dir_node_size is not None:
-            d_opts['size'] = self._size(dir)
+            d_opts['size'] = max(self.min_size, min(self._size(dir), self.max_size))
         return (
             Node(dir_rel, **d_opts),
             Edge(parent_rel, dir_rel, **self.edge_options)
@@ -265,7 +272,7 @@ class DirectoryBuilder:
             groups[f_opts['group']] = self.file_groups.get(f_opts['group'], self.file_options)
 
         if self.file_node_size is not None:
-            f_opts['size'] = self._size(fl)
+            f_opts['size'] = max(self.min_size, min(self._size(fl), self.max_size))
 
         return (
             Node(fl_rel, **f_opts),
