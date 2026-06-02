@@ -250,7 +250,7 @@ class DirectoryBuilder:
         )
         d_opts: NodeOptions = {
             'label': dir.name,
-            'title': dir.as_posix(),
+            'title': dir_rel,
             'group': 'directory',
             'link': dir.as_uri(),
             'level': len(dir.relative_to(self.sub_path).parts)
