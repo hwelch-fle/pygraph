@@ -7,6 +7,6 @@ const network = new vis.Network(
     {{ data["options"] | tojson }}
 );
 
-{% for handler in pygraph.get('handlers', []) %}
+{% for handler in pygraph["handlers"] | default ([]) %}
 network.{{ handler }}
 {% endfor %}
