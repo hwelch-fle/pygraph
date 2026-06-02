@@ -4,11 +4,12 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
-from types import MappingProxyType
+from copy import deepcopy
 from typing import (
     Any,
     Literal,
     TypedDict,
+    TypeGuard,
     Unpack,
     overload,
 )
@@ -57,19 +58,23 @@ type NodeId = str | int
 type EdgeId = tuple[NodeId, NodeId]
 
 
+def is_mapping(obj: Mapping[Any, Any] | Any) -> TypeGuard[Mapping[Any, Any]]:
+    return isinstance(obj, Mapping)
+
+
 # Helper to de proxy the defaults
 # types are all wrong becuase we're lying about what the Default*
 # dicts are since MappingProxyType will clear all TypedDict hinting
-def deprox[T: Mapping[str, Any]](o: T) -> T:
+def deprox[T](o: T) -> T:
     """INTERNAL: Used to turn nested MappingProxyTypes into a dict"""
-    deproxed: T = {}      # type: ignore
+    deproxed: dict[Any, Any] = {}
+    assert is_mapping(o)
     for k, v in o.items():
-        deproxed[k] = (   # type: ignore
-            deprox(v)     # type: ignore
-            if isinstance(v, (dict, MappingProxyType))
-            else v
-        )
-    return deproxed
+        if is_mapping(v):
+            deproxed[k] = deprox(v)
+        else:
+            deproxed[k] = deepcopy(v)
+    return deproxed  # type: ignore
 
 
 class Node:
@@ -205,7 +210,7 @@ class Network:
                  es: Iterable[Edge | EdgeId] | None = None,
                  **kwargs: Unpack[NetworkOptions]
         ) -> None:
-        self.options = deprox(DefaultNetworkOptions)
+        self.options: NetworkOptions = deprox(DefaultNetworkOptions)
         self.options.update(kwargs)
         self.graph = rx.PyDiGraph()
         self.add_nodes_from(ns or [])
