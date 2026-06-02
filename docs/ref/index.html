@@ -1,19 +1,10 @@
-
-
 <html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Repo Index</title>
-    <!-- JetBrains Mono -->
+    <title>Home</title>
     <link
       href="https://fonts.googleapis.com/css?family=JetBrains Mono"
-      rel="stylesheet"
-    />
-
-    <!-- Material Symbols -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
       rel="stylesheet"
     />
 
@@ -33,7 +24,7 @@
     ></script>
     <style type="text/css">
       body {
-        font-family: 'JetBrains Mono';font-size: 12px;
+        font-family: "JetBrains Mono";font-size: 12px;
       }
       #pygraph {
           width: 100%;
@@ -49,61 +40,22 @@
 
     <script type="text/javascript">
       
-      // ---------------- NETWORK START ----------------------
-const data = create_network();
+      const network = new vis.Network(
+    document.getElementById('pygraph'),
+    {
+        nodes: new vis.DataSet([{"color": "#7C7C7CAB", "id": "user:hwelch-fle", "image": "https://github.com/hwelch-fle.png?size=100", "label": "hwelch-fle", "link": "https://github.com/hwelch-fle", "shadow": {"color": "#e863dc", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "hwelch-fle"}, {"group": "hwelch-fle", "id": "repo:cimple", "label": "cimple", "link": "repo-graphs/hwelch-fle/cimple.html", "title": "cimple"}, {"group": "hwelch-fle", "id": "repo:geo-grab", "label": "geo-grab", "link": "repo-graphs/hwelch-fle/geo-grab.html", "title": "geo-grab"}, {"group": "hwelch-fle", "id": "repo:pygraph", "label": "pygraph", "link": "repo-graphs/hwelch-fle/pygraph.html", "title": "pygraph"}, {"group": "hwelch-fle", "id": "repo:arcpie", "label": "arcpie", "link": "repo-graphs/hwelch-fle/arcpie.html", "title": "arcpie"}, {"color": "#7C7C7CAB", "id": "user:pallets", "image": "https://github.com/pallets.png?size=100", "label": "pallets", "link": "https://github.com/pallets", "shadow": {"color": "#63f212", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "pallets"}, {"group": "pallets", "id": "repo:jinja", "label": "jinja", "link": "repo-graphs/pallets/jinja.html", "title": "jinja"}, {"color": "#7C7C7CAB", "id": "user:ionelmc", "image": "https://github.com/ionelmc.png?size=100", "label": "ionelmc", "link": "https://github.com/ionelmc", "shadow": {"color": "#da76f1", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "ionelmc"}, {"group": "ionelmc", "id": "repo:pytest-benchmark", "label": "pytest-benchmark", "link": "repo-graphs/ionelmc/pytest-benchmark.html", "title": "pytest-benchmark"}, {"color": "#7C7C7CAB", "id": "user:encode", "image": "https://github.com/encode.png?size=100", "label": "encode", "link": "https://github.com/encode", "shadow": {"color": "#97a576", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "encode"}, {"group": "encode", "id": "repo:httpx", "label": "httpx", "link": "repo-graphs/encode/httpx.html", "title": "httpx"}, {"group": "hwelch-fle", "id": "repo:plankapy", "label": "plankapy", "link": "repo-graphs/hwelch-fle/plankapy.html", "title": "plankapy"}, {"group": "pallets", "id": "repo:click", "label": "click", "link": "repo-graphs/pallets/click.html", "title": "click"}, {"color": "#7C7C7CAB", "id": "user:visjs", "image": "https://github.com/visjs.png?size=100", "label": "visjs", "link": "https://github.com/visjs", "shadow": {"color": "#fd961a", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "visjs"}, {"group": "visjs", "id": "repo:vis-network", "label": "vis-network", "link": "repo-graphs/visjs/vis-network.html", "title": "vis-network"}, {"color": "#7C7C7CAB", "id": "user:Qiskit", "image": "https://github.com/Qiskit.png?size=100", "label": "Qiskit", "link": "https://github.com/Qiskit", "shadow": {"color": "#37100a", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "Qiskit"}, {"group": "Qiskit", "id": "repo:rustworkx", "label": "rustworkx", "link": "repo-graphs/Qiskit/rustworkx.html", "title": "rustworkx"}, {"color": "#7C7C7CAB", "id": "user:pytest-dev", "image": "https://github.com/pytest-dev.png?size=100", "label": "pytest-dev", "link": "https://github.com/pytest-dev", "shadow": {"color": "#b0f8da", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "pytest-dev"}, {"group": "pytest-dev", "id": "repo:pytest", "label": "pytest", "link": "repo-graphs/pytest-dev/pytest.html", "title": "pytest"}, {"color": "#7C7C7CAB", "id": "user:fastapi", "image": "https://github.com/fastapi.png?size=100", "label": "fastapi", "link": "https://github.com/fastapi", "shadow": {"color": "#0d32bc", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "fastapi"}, {"group": "fastapi", "id": "repo:typer", "label": "typer", "link": "repo-graphs/fastapi/typer.html", "title": "typer"}, {"group": "fastapi", "id": "repo:fastapi", "label": "fastapi", "link": "repo-graphs/fastapi/fastapi.html", "title": "fastapi"}]), 
+        edges: new vis.DataSet([{"from": "user:hwelch-fle", "to": "repo:cimple"}, {"from": "user:hwelch-fle", "to": "repo:geo-grab"}, {"from": "user:hwelch-fle", "to": "repo:pygraph"}, {"from": "user:hwelch-fle", "to": "repo:arcpie"}, {"from": "user:pallets", "to": "repo:jinja"}, {"from": "user:ionelmc", "to": "repo:pytest-benchmark"}, {"from": "user:encode", "to": "repo:httpx"}, {"from": "user:hwelch-fle", "to": "repo:plankapy"}, {"from": "user:pallets", "to": "repo:click"}, {"from": "user:visjs", "to": "repo:vis-network"}, {"from": "user:Qiskit", "to": "repo:rustworkx"}, {"from": "user:pytest-dev", "to": "repo:pytest"}, {"from": "user:fastapi", "to": "repo:typer"}, {"from": "user:fastapi", "to": "repo:fastapi"}]),
+    }, 
+    {"autoResize": true, "clickToUse": false, "configure": {"enabled": true, "filter": true, "showButton": true}, "edges": {"arrows": "to", "length": 200}, "groups": {"Qiskit": {"color": "#37100a"}, "encode": {"color": "#97a576"}, "fastapi": {"color": "#0d32bc"}, "hwelch-fle": {"color": "#e863dc"}, "ionelmc": {"color": "#da76f1"}, "pallets": {"color": "#63f212"}, "pytest-dev": {"color": "#b0f8da"}, "useDefaultGroups": true, "visjs": {"color": "#fd961a"}}, "height": "100%", "interaction": {"dragNodes": true, "dragView": true, "hideEdgesOnDrag": false, "hideEdgesOnZoom": false, "hideNodesOnDrag": false, "hover": false, "hoverConnectedEdges": true, "keyboard": {"autoFocus": true, "bindToWindow": true, "enabled": false, "speed": {"x": 1, "y": 1, "zoom": 0.02}}, "multiselect": false, "navigationButtons": false, "selectConnectedEdges": true, "selectable": true, "tooltipDelay": 300, "zoomSpeed": 1, "zoomView": true}, "layout": {"clusterThreshold": 150, "hierarchical": {"blockShifting": true, "direction": "UD", "edgeMinimization": true, "enabled": false, "levelSeparation": 150, "nodeSpacing": 100, "parentCentralization": true, "sortMethod": "hubsize", "treeSpacing": 200}, "improvedLayout": true}, "locale": "en", "locales": {}, "manipulation": {"addEdge": true, "addNode": true, "controlNodeStyle": {"borderWidth": 2, "borderWidthSelected": 2, "color": {"background": "#ff0000", "border": "#3c3c3c", "highlight": {"background": "#07f968", "border": "#3c3c3c"}}, "shape": "dot", "size": 6}, "deleteEdge": true, "deleteNode": true, "editEdge": true, "enabled": false, "initiallyActive": true}, "nodes": {"font": {"color": "#ffffff", "face": "JetBrains Mono", "strokeColor": "#434343", "strokeWidth": 3}, "shape": "star"}, "physics": {"adaptiveTimestep": true, "barnesHut": {"avoidOverlap": 0.75, "gravitationalConstant": -6000}, "enabled": true, "forceAtlas2Based": {"avoidOverlap": 0.0, "centralGravity": 0.01, "damping": 0.4, "gravitationalConstant": -50, "springConstant": 0.08, "springLength": 100, "theta": 0.5}, "hierarchicalRepulsion": {"avoidOverlap": 0.0, "centralGravity": 0.01, "damping": 0.09, "nodeDistance": 120, "springConstant": 0.01, "springLength": 100}, "maxVelocity": 50, "minVelocity": 0.1, "repulsion": {"centralGravity": 0.2, "damping": 0.09, "nodeDistance": 100, "springConstant": 0.05, "springLength": 200}, "solver": "barnesHut", "stabilization": {"enabled": true, "fit": true, "iterations": 1000, "onlyDynamicEdges": false, "updateInterval": 50}, "timestep": 0.5, "wind": {"x": 0, "y": 0}}, "width": "100%"}
+);
 
-function create_network() {
-    const container = document.getElementById('pygraph');
-    const data = {
-        nodes: new vis.DataSet([
-          {'id': 'root', 'title': 'Home', 'label': 'Home', 'link': 'https://hwelch-fle.github.io', 'x': 0, 'y': 0, 'fixed': true, 'color': 'gold', 'size': 100}, 
-          {'id': 'pygraph', 'title': 'pygraph', 'label': 'pygraph', 'link': 'examples/pygraph.html'}, 
-          {'id': 'vis-network', 'title': 'vis-network', 'label': 'vis-network', 'link': 'examples/vis-network.html'}, 
-          {'id': 'rustworkx', 'title': 'rustworkx', 'label': 'rustworkx', 'link': 'examples/rustworkx.html'}, 
-          {'id': 'rsync', 'title': 'rsync', 'label': 'rsync', 'link': 'examples/rsync.html'},
-        ]),
-        edges: new vis.DataSet([
-          {'from': 'root', 'to': 'rsync'}, 
-          {'from': 'root', 'to': 'pygraph'},
-          {'from': 'root', 'to': 'rustworkx'},
-          {'from': 'root', 'to': 'vis-network'},
-        ]),
-    };
-    const options = {
-      "autoResize": true, 
-      "clickToUse": false, 
-      "configure": {"filter": false}, 
-      "edges": {"arrowStrikethrough": true, "arrows": "to", "color": {"hover": "gold", "inherit": "to"}, "endPointOffset": {"to": -5}, "hoverWidth": 5, "length": 50, "width": 3}, 
-      "groups": {"file": {"font": {"color": "white", "strokeWidth": 3}, "icon": {"code": "\uf1c9", "color": "#3572a5"}, "shape": "icon"}, 
-      "useDefaultGroups": false}, 
-      "height": "100%", 
-      "interaction": {"hoverConnectedEdges": true, "keyboard": {"enabled": true}, "navigationButtons": true, "selectConnectedEdges": true}, 
-      "layout": {"clusterThreshold": 150, "hierarchical": {"blockShifting": true, "direction": "UD", "edgeMinimization": true, "enabled": false, "levelSeparation": 150, "nodeSpacing": 100, "parentCentralization": true, "sortMethod": "hubsize", "treeSpacing": 200}, "improvedLayout": true}, 
-      "locale": "en", 
-      "locales": {}, 
-      "manipulation": {"addEdge": true, "addNode": true, "controlNodeStyle": {"borderWidth": 2, "borderWidthSelected": 2, "color": {"background": "#ff0000", "border": "#3c3c3c", "highlight": {"background": "#07f968", "border": "#3c3c3c"}}, "shape": "dot", "size": 6}, "deleteEdge": true, "deleteNode": true, "editEdge": true, "enabled": false, "initiallyActive": true}, 
-      "nodes": {"font": {"color": "#ffffff", "size": 20, "strokeColor": "#4e4e4e", "strokeWidth": 5}, "shadow": {"color": "#454545", "size": 3, "x": 1, "y": 1}, "shape": "star"}, 
-      "physics": {"barnesHut": {"avoidOverlap": 0.5, "centralGravity": 0.1, "gravitationalConstant": -15000}, "solver": "barnesHut"}, "width": "100%"};
-    const pygraph = "";
-    const network = new vis.Network(container, data, options)
 
-    // Event Handlers
-    network.on('doubleClick', function (event) {
-        const { nodes } = event;
-        if (nodes.length == 0) { return; }
-        const nodeId = nodes[0];
-        const nodeData = network.body.data.nodes.get(nodeId);
-        if ( nodeData.link ) { window.open(nodeData.link); }
-    });
+network.on('doubleClick', function (event) {
+    const node = network.body.data.nodes.get(event.nodes[0]);
+    if (node) { window.open(node.link) };
+});
 
-    return {
-        network: network,
-        pygraph: pygraph,
-    }
-}
 
-// ---------------- NETWORK END ----------------------
-      
       
     </script>
   </body>
