@@ -15,9 +15,9 @@ def main():
         style=GitRepoStyle,
         ignores={'files': ['.gitignore'], 'patterns': ['.venv/', '.git/']},
     )
-    nw = builder.web_network(host='github.com', user='hwelch-fle', branch='master')
+    nw = builder.web_network()
     print(nw)
-    out = Path('docs/ref/index.html')
+    out = Path(f'docs/ref/examples/{builder.repo}.html')
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(to_html(nw, template, jinja={'background': '#1f1f1f'}))
 
