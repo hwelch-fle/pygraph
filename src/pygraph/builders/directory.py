@@ -99,6 +99,8 @@ class DirectoryBuilder:
         ignores: Path | str | list[str | Path] | _ExcludeOpts | None = None,
         max_size: int | None = 500,
         min_size: int | None = 50,
+        directories_only: bool | None = None,
+        max_levels: int | None = None,
     ) -> None:
         """..."""
 
@@ -127,7 +129,7 @@ class DirectoryBuilder:
                 'file_groups': file_groups or {},
                 'file_node_size': file_node_size,
                 'dir_node_size': dir_node_size,
-                'ignores': ignores or [],
+                'ignores': ignores or {},
             }
         )  # type: ignore
         self.file_options = self.style.get('file_options', {})
@@ -138,8 +140,10 @@ class DirectoryBuilder:
         self.file_groups = {ext: self._populate_group(ext, opts) for ext, opts in self.style.get('file_groups', {}).items()}
         self.file_node_size = self.style.get('file_node_size')
         self.dir_node_size = self.style.get('dir_node_size')
-        self.max_size = self.style.get('max_size', max_size) or sys.maxsize
-        self.min_size = self.style.get('min_size', min_size) or 1
+        self.max_size = max_size or self.style.get('max_size', sys.maxsize)
+        self.min_size = min_size or self.style.get('min_size', 1)
+        self.directories_only = directories_only or self.style.get('directories_only', False)
+        self.max_levels = max_levels or self.style.get('max_levels', None)
 
         # Parse ignores
         self.ignores = set(self._parse_ignores(ignores))
@@ -288,13 +292,27 @@ class DirectoryBuilder:
 
     def _walk(self) -> Iterable[tuple[Node, Edge]]:
         self.refresh()
-        for root, _, files in self.sub_path.walk(top_down=True):
+        for root, _, files in self.sub_path.walk():
             if self._ignore(root):
                 continue
             if res := self._dir_parts(root.resolve()):
                 yield res
-            for fl in files:
-                if res := self._file_parts((root / fl).resolve()):
+            if not self.directories_only:
+                for fl in files:
+                    if res := self._file_parts((root / fl).resolve()):
+                        yield res
+
+    # Only use when you want to limit traversal
+    def _fast_walk(self, root: Path, levels: int) -> Iterable[tuple[Node, Edge]]:
+        if levels == 0:
+            return
+        if res := self._dir_parts(root.resolve()):
+            yield res
+        for child in root.iterdir():
+            if child.is_dir():
+                yield from self._fast_walk(child, levels - 1)
+            elif not self.directories_only:
+                if res := self._file_parts(child):
                     yield res
 
     def _create_link(self, node: Node, *, host: str, user: str, repo: str, branch: str, tree: str) -> None:
@@ -351,7 +369,7 @@ class DirectoryBuilder:
     def data(self) -> tuple[list[Node], list[Edge]]:
         nodes = list[Node]()
         edges = list[Edge]()
-        for nd, ed in self._walk():
+        for nd, ed in (self._walk() if not self.max_levels else self._fast_walk(self.root, self.max_levels)):
             nodes.append(nd)
             if len(set(ed.key)) > 1:
                 edges.append(ed)
