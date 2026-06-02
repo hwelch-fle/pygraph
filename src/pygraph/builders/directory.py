@@ -6,6 +6,7 @@ import tempfile
 from collections.abc import (
     Iterable,
     Mapping,
+    MutableMapping,
 )
 from copy import deepcopy
 from functools import cached_property
@@ -42,7 +43,7 @@ __all__ = 'DirectoryBuilder',
 def _get_git(url: str) -> Path:
     repo = f'{url.rsplit('/', maxsplit=1)[-1].replace('.git', '')}'
     tmp = tempfile.TemporaryDirectory(prefix=f'{repo}_', delete=False)
-    subprocess.run(['git', 'clone', url, tmp.name])
+    subprocess.run(['git', 'clone', '--single-branch', '--depth=1', url, tmp.name])
     return Path(tmp.name)
 
 
@@ -59,6 +60,20 @@ class _ExcludeOpts(TypedDict, total=False):
     patterns: list[str]
 
 
+def deep_update[K, V](target: Mapping[K, V], updates: Mapping[K, V]) -> MutableMapping[K, V]:
+    updated = deprox(target)
+    for k in target.keys() | updates.keys():
+        if k not in updates:
+            continue
+        if k not in target:
+            updated[k] = updates[k]  # type: ignore
+        elif isinstance(target[k], Mapping):
+            updated[k] = deep_update(updates[k], target[k])  # type: ignore
+        else:
+            updated[k] = deepcopy(target[k])  # type: ignore
+    return updated  # type: ignore
+
+
 class DirectoryBuilder:
     """Build a Network from a Directory"""
 
@@ -71,7 +86,7 @@ class DirectoryBuilder:
         self,
         root: Path | str,
         sub_path: Path | str = '',
-        style: DirectoryBuilderOpts | None = None,
+        style: DirectoryBuilderOpts | None = None,  # type: ignore
         *,
         file_options: NodeOptions | None = None,
         dir_options: NodeOptions | None = None,
@@ -81,9 +96,9 @@ class DirectoryBuilder:
         file_groups: dict[str, NodeOptions] | None = None,
         file_node_size: Literal['filesize', 'linecount'] | None = None,
         dir_node_size: Literal['filesize', 'filecount'] | None = None,
+        ignores: Path | str | list[str | Path] | _ExcludeOpts | None = None,
         max_size: int | None = 500,
         min_size: int | None = 50,
-        ignores: Path | str | list[str | Path] | _ExcludeOpts | None = None,
     ) -> None:
         """..."""
 
@@ -101,30 +116,30 @@ class DirectoryBuilder:
         self.sub_path = root / sub_path
 
         # Resolve base style with overrides
-        style = deprox(style) if style else {}
-        style.setdefault('file_options', {}).update(file_options or {})
-        style.setdefault('dir_options', {}).update(dir_options or {})
-        style.setdefault('root_options', {}).update(root_options or {})
-        style.setdefault('edge_options', {}).update(edge_options or {})
-        style.setdefault('network_options', {}).update(network_options or {})
-        style.setdefault('file_groups', {}).update(file_groups or {})
-        style['file_groups'] = style.get('file_groups', {})
-        style.setdefault('file_node_size', None)
-        style['file_node_size'] = file_node_size or style.get('file_node_size')
-        style.setdefault('dir_node_size', None)
-        style['dir_node_size'] = dir_node_size or style.get('dir_node_size')
-        style['ignores'] = ignores or style.get('ignores', {})
-
-        self.file_options = style.get('file_options', {})
-        self.dir_options = style.get('dir_options', {})
-        self.root_options = style.get('root_options', {})
-        self.edge_options = style.get('edge_options', {})
-        self.network_options = style.get('network_options', {})
-        self.file_groups = self._populate_groups(style.get('file_groups', {}))
-        self.file_node_size = style.get('file_node_size')
-        self.dir_node_size = style.get('dir_node_size')
-        self.max_size = max_size or sys.maxsize
-        self.min_size = min_size or 1
+        self.style: DirectoryBuilderOpts = deep_update(
+            style or {},
+            {
+                'file_options': file_options or {},
+                'dir_options': dir_options or {},
+                'root_options': root_options or {},
+                'edge_options': edge_options or {},
+                'network_options': network_options or {},
+                'file_groups': file_groups or {},
+                'file_node_size': file_node_size,
+                'dir_node_size': dir_node_size,
+                'ignores': ignores or [],
+            }
+        )  # type: ignore
+        self.file_options = self.style.get('file_options', {})
+        self.dir_options = self.style.get('dir_options', {})
+        self.root_options = self.style.get('root_options', {})
+        self.edge_options = self.style.get('edge_options', {})
+        self.network_options = self.style.get('network_options', {})
+        self.file_groups = {ext: self._populate_group(ext, opts) for ext, opts in self.style.get('file_groups', {}).items()}
+        self.file_node_size = self.style.get('file_node_size')
+        self.dir_node_size = self.style.get('dir_node_size')
+        self.max_size = self.style.get('max_size', max_size) or sys.maxsize
+        self.min_size = self.style.get('min_size', min_size) or 1
 
         # Parse ignores
         self.ignores = set(self._parse_ignores(ignores))
@@ -141,29 +156,23 @@ class DirectoryBuilder:
         parts = url.rsplit('/', maxsplit=3)
         return parts[-3], parts[-2], parts[-1].removesuffix('.git'), _get_git(url)
 
-    def _populate_groups(self, groups: dict[str, NodeOptions]) -> dict[str, NodeOptions]:
-        # Pull default file options and update them with file specifics
-        for opts in groups.values():
-            temp = deepcopy(self.file_options)
-            temp.pop('color', None)  # colors are set based on extension md5 hash
-            temp.update(opts)
-            opts.update(temp)
+    def _populate_group(self, file_extension: str, opts: NodeOptions) -> NodeOptions:
+        temp = deepcopy(self.file_options)
+        temp.pop('color', None)  # colors are set based on extension md5 hash
+        if 'icon' in temp and 'color' in temp['icon']:
+            temp['icon'].pop('color', None)
+        temp = deep_update(temp, opts)
+        opts = deep_update(opts, temp)  # type: ignore
 
-        # General transformations
-        for file_extension, opts in groups.items():
-            groups[file_extension] = opts
+        # If no color is set, get a unique color
+        if opts.get('shape') != 'icon':
+            opts.setdefault('color', self._file_color(file_extension))
 
-            # If an icon is set, make sure the shape type is set to icon
-            # Also make sure that the icon gets a unique color
-            if 'icon' in opts:
-                opts['shape'] = 'icon'
-                if 'color' not in opts['icon']:
-                    opts['icon']['color'] = self._file_color(file_extension)
-
-            # If no color is set, get a unique color
-            elif 'color' not in opts:
-                opts['color'] = self._file_color(file_extension)
-        return groups
+        # If an icon is set, make sure the shape type is set to icon
+        # Also make sure that the icon gets a unique color
+        if opts.get('shape') == 'icon' and (icon := opts.get('icon')):
+            icon.setdefault('color', self._file_color(file_extension))
+        return opts
 
     def _read_ignore_file(self, ig: Path) -> list[str]:
         if not ig.is_absolute():
@@ -219,7 +228,7 @@ class DirectoryBuilder:
         return 0
 
     def _file_color(self, file_extension: str) -> str:
-        return f'#{hashlib.md5(file_extension.encode('utf-8')).hexdigest()[:6]}'  # noqa: S324
+        return f'#{hashlib.md5(file_extension.encode('utf-8'), usedforsecurity=False).hexdigest()[:6]}'
 
     def _ignore(self, fl: Path) -> bool:
         posix = fl.as_posix()
@@ -229,8 +238,6 @@ class DirectoryBuilder:
         )
 
     def _dir_parts(self, dir: Path) -> tuple[Node, Edge] | None:
-        if self._ignore(dir):
-            return
         dir_rel = dir.relative_to(self.sub_path).as_posix()
         parent_rel = (
             dir.parent.relative_to(self.sub_path).as_posix()
@@ -267,9 +274,9 @@ class DirectoryBuilder:
             'group': fl.suffix or 'file',
             'level': len(fl.relative_to(self.sub_path).parts)
         }
-        if f_opts['group'] not in self.network_options.get('groups', {}):
-            groups = self.network_options.setdefault('groups', {'useDefaultGroups': False})
-            groups[f_opts['group']] = self.file_groups.get(f_opts['group'], self.file_options)
+        groups = self.network_options.setdefault('groups', {'useDefaultGroups': False})
+        if (ext := f_opts['group']) not in groups:
+            groups[ext] = self.file_groups.get(ext, self._populate_group(ext, deepcopy(self.file_options)))
 
         if self.file_node_size is not None:
             f_opts['size'] = max(self.min_size, min(self._size(fl), self.max_size))
@@ -282,6 +289,8 @@ class DirectoryBuilder:
     def _walk(self) -> Iterable[tuple[Node, Edge]]:
         self.refresh()
         for root, _, files in self.sub_path.walk(top_down=True):
+            if self._ignore(root):
+                continue
             if res := self._dir_parts(root.resolve()):
                 yield res
             for fl in files:
@@ -315,11 +324,28 @@ class DirectoryBuilder:
             else:
                 node.data['link'] = f'https://{host}/{user}/{repo}'
                 node.data['title'] = f'{repo}'
+                node.data['label'] = f'{repo}'
             return
 
         # Handle all child nodes
         rel = pth.relative_to(self.root, walk_up=True).as_posix()
         node.data['link'] = f'https://{host}/{user}/{repo}/{tree}/{branch}/{rel}'
+
+    def delete_directory(self, *, force: bool = False):
+        """Delete the root directory (used when targeting a web-repo and git-cloning into a tempdir)"""
+        is_temp = self.root.is_relative_to(Path(tempfile.TemporaryDirectory(delete=True).name).parent)
+        if not is_temp and not force:
+            raise FileExistsError(f'{self.root} is not a temp directory, run with `force = True` to force delete')
+        for r, ds, fs in self.root.walk(top_down=False):
+            r.chmod(0o0200)
+            for f in fs:
+                f = r / f
+                f.chmod(0o0200)
+                f.unlink()
+            for d in ds:
+                d = r / d
+                d.rmdir()
+        self.root.rmdir()
 
     @cached_property
     def data(self) -> tuple[list[Node], list[Edge]]:
@@ -377,7 +403,7 @@ class DirectoryBuilder:
         repo = repo or self.repo
         tree = tree or self._trees.get(str(host), 'blob')
         branch = branch or _get_branch(self.root)
-        if not host and user and branch and tree:
+        if not all((host, user, branch, tree)):
             raise ValueError(
                 'web_network requires that a repo, user, and host are set '
                 f'({host=}, {user=}, {repo=}, {tree=}, {branch=})'
