@@ -252,7 +252,7 @@ class DirectoryBuilder:
         )
 
     def _file_parts(self, fl: Path) -> tuple[Node, Edge] | None:
-        if self._ignore(fl):
+        if self._ignore(fl) or not fl.is_relative_to(self.root):
             return
         fl_rel = fl.relative_to(self.sub_path).as_posix()
         parent_rel = (
