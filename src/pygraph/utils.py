@@ -7,7 +7,10 @@ from typing import (
 )
 
 import jinja2
-import rustworkx as rx
+try:
+    import rustworkx as rx
+except ImportError:
+    import networkx as nx
 
 from pygraph.pygraph import (
     Edge,

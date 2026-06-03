@@ -14,8 +14,6 @@ from typing import (
     overload,
 )
 
-import rustworkx as rx
-
 from pygraph.vis.physics import (
     BarnesHut,
     DefaultBarnesHut,
@@ -27,6 +25,7 @@ from pygraph.vis.physics import (
     Repulsion,
 )
 
+from ._adapters import DiGraph
 from .vis import (
     DefaultEdgeOptions,
     DefaultNetworkOptions,
@@ -212,7 +211,7 @@ class Network:
         ) -> None:
         self.options: NetworkOptions = deprox(DefaultNetworkOptions)
         self.options.update(kwargs)
-        self.graph = rx.PyDiGraph()
+        self.graph = DiGraph()
         self.add_nodes_from(ns or [])
         self.add_edges_from(es or [])
 
