@@ -334,6 +334,40 @@ class Network:
         adj = self.graph.adj(self.node_map[node])
         return {self.graph[nd]: adj[nd] for nd in adj}
 
+    def spring_solve(
+        self,
+        scale_factor: int = 1000,
+        pos: dict[int, tuple[float, float]] | None = None,
+        fixed: set[int] | None = None,
+        k: float | None = None,
+        repulsive_exponent: int = 2,
+        adaptive_cooling: bool = True,
+        num_iter: int = 50,
+        tol: float | None = 1e-06,
+        weight_fn: Callable[[Node], float] | None = None,
+        default_weight: float = 1,
+        scale: float = 1,
+        center: tuple[float, float] | None = None,
+        seed: int | None = None,
+    ) -> None:
+        """Use the rustworkx sprint_layout function to pre-compute the node positions. This can help
+        speed up rendering time for complex graphs.
+
+        Args:
+            scale_factor: Scale the position (`0->1`) with this factor (default: `1000`)
+            *args: [See Here](https://www.rustworkx.org/apiref/rustworkx.digraph_spring_layout.html)
+        """
+
+        layout = rx.digraph_spring_layout(
+            self.graph, pos, fixed, k, repulsive_exponent, adaptive_cooling,
+            num_iter, tol, weight_fn, default_weight, scale, center, seed
+        )
+        for node_id in self.node_map.values():
+            x, y = layout[node_id]
+            node = self.graph[node_id]
+            node['x'] = int(x * scale_factor)
+            node['y'] = int(y * scale_factor)
+
     # Dunder Overrides
 
     def __repr__(self) -> str:
