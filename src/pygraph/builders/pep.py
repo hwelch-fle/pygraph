@@ -52,7 +52,7 @@ class PepBuilder:
     def __init__(self) -> None:
         with urlopen('https://peps.python.org/api/peps.json') as response:
             self.peps: dict[str, dict[str, Any]] = json.load(response)
-        self.peps = {num: pep for num, pep in self.peps.items() if pep['status'] in ('Active', 'Accepted', 'Final') and pep['number'] != 733}
+        self.peps = {num: pep for num, pep in self.peps.items() if pep['status'] in ('Active', 'Accepted', 'Final')}
         self._authors: list[tuple[str, str]] = [
             (author, f'{pep['number']}: {pep['title']}')
             for pep in self.peps.values()
