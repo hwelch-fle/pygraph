@@ -88,12 +88,16 @@
         var lastClicked = new Date().valueOf()
         network.on('click', (event) => {
             const clickedAt = new Date().valueOf();
-            if (clickedAt - lastClicked < 100) { lastClicked = clickedAt; return; }
-            lastClicked = clickedAt;
-            const node = data.nodes.get({ filter: (node) => { return node.id == event.nodes[0] } })[0];
-            const edge = data.edges.get({ filter: (edge) => { return edge.id == event.edges[0] } })[0];
-            if (node) { tomSelectNodes.addItem(node.id, false) }
-            else if (edge) { tomSelectEdges.addItem(edge.title, false) }
+            console.log(lastClicked)
+            console.log(clickedAt - lastClicked)
+            if (clickedAt - lastClicked < 500) { lastClicked = clickedAt; return; }
+            else {
+                lastClicked = clickedAt;
+                const node = data.nodes.get({ filter: (node) => { return node.id == event.nodes[0] } })[0];
+                const edge = data.edges.get({ filter: (edge) => { return edge.id == event.edges[0] } })[0];
+                if (node) { tomSelectNodes.addItem(node.id, false) }
+                else if (edge) { tomSelectEdges.addItem(edge.title, false) }
+            }
         });
 
         network.on('hoverEdge', (event) => {
@@ -110,7 +114,6 @@
 
         network.on('hoverNode', (event) => {
             const edges = Array.from(network.body.data.edges.get({filter: (edge) => { return [edge.from, edge.to].includes(event.node)}}));
-            console.log(edges)
             edges.forEach(edge => {
                 edge.font.size = 12;
             });
@@ -119,7 +122,6 @@
 
         network.on('blurNode', (event) => {
             const edges = Array.from(network.body.data.edges.get({filter: (edge) => { return [edge.from, edge.to].includes(event.node)}}));
-            console.log(edges)
             edges.forEach(edge => {
                 edge.font.size = 0;
             });
