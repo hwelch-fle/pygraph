@@ -122,7 +122,7 @@
         );
         network.on('doubleClick', function (event) {
             const node = network.body.data.nodes.get(event.nodes[0]);
-            if (node) { window.open(node.link) };
+            if (node && node.link) { window.open(node.link) };
         });
     </script>
 </body>
