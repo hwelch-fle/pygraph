@@ -35,6 +35,10 @@ TARGETS = [
     # pytest-benchmark
     'https://github.com/ionelmc/pytest-benchmark.git',
 
+    # python
+    'https://github.com/python/cpython.git',
+    'https://github.com/python/peps.git',
+
     # hwelch-fle
     'https://github.com/hwelch-fle/pygraph.git',
     'https://github.com/hwelch-fle/plankapy.git',
@@ -78,7 +82,7 @@ def build_graph(url: str) -> DirectoryBuilder:
     return builder
 
 
-def main():
+def main() -> None:
     template = ENV.get_template('html/basic-template.html')
     built: list[DirectoryBuilder] = []
 

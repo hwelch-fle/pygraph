@@ -334,6 +334,32 @@ class Network:
         adj = self.graph.adj(self.node_map[node])
         return {self.graph[nd]: adj[nd] for nd in adj}
 
+    def pre_solve(
+        self,
+        pos: dict[int, tuple[float, float]] | None = None,
+        fixed: set[int] | None = None,
+        k: float | None = None,
+        repulsive_exponent: int = 2,
+        adaptive_cooling: bool = True,
+        num_iter: int = 50,
+        tol: float | None = 1e-06,
+        weight_fn: Callable[[Node], float] | None = None,
+        default_weight: float = 1,
+        scale: float = 1,
+        center: tuple[float, float] | None = None,
+        seed: int | None = None,
+    ) -> None:
+
+        layout = rx.digraph_spring_layout(
+            self.graph, pos, fixed, k, repulsive_exponent, adaptive_cooling,
+            num_iter, tol, weight_fn, default_weight, scale, center, seed
+        )
+        for node_id in self.node_map.values():
+            x, y = layout[node_id]
+            node = self.graph[node_id]
+            node['x'] = int(x * 1000)
+            node['y'] = int(y * 1000)
+
     # Dunder Overrides
 
     def __repr__(self) -> str:

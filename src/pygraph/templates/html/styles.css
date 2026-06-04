@@ -1,0 +1,11 @@
+body {
+font-family: "{{jinja['font'] | default('JetBrains Mono')}}";
+font-size: 12px;
+}
+
+#pygraph {
+    width: {{ data["options"]["width"] | default ('100%') }};
+    height: {{ data["options"]["height"] | default ('95%') }};
+    border: 1px solid lightgray;
+    background-color:{{ jinja["background"] | default ('darkslategrey') }};
+}
