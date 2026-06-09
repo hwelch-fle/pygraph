@@ -44,17 +44,8 @@ TARGETS = [
 ]
 
 
-HANDLERS: list[str] = []
-HANDLERS.append(
-"""on('doubleClick', function (event) {
-    const node = network.body.data.nodes.get(event.nodes[0]);
-    if (node) { window.open(node.link) };
-});
-""")
-
-
 def build_graph(url: str) -> DirectoryBuilder:
-    template = ENV.get_template('html/basic-template.html')
+    template = ENV.get_template('html/base.html')
     builder = DirectoryBuilder(
         url,
         style=GitRepoStyle,
@@ -62,24 +53,31 @@ def build_graph(url: str) -> DirectoryBuilder:
         network_options={'nodes': {'font': {'face': 'JetBrains Mono'}}},
     )
     nx = builder.web_network()
+    nx.spring_solve()
     out = Path(f'docs/ref/repo-graphs/{builder.user}/{builder.repo}.html')
     out.parent.mkdir(parents=True, exist_ok=True)
     html = to_html(
         nx,
         template,
-        jinja={
-            'background': '#1f1f1f',
-            'font': 'JetBrains Mono',
-            'title': builder.repo,
-        },
-        pygraph={'handlers': HANDLERS}
+        network={},
+        progressor={'enabled': True},
+        selectors={
+            'node': {
+                'placeholder_text': 'Search Files',
+                'search_field': 'id',
+                'label_field': 'id',
+            },
+            'edge': {
+                'enabled': False,
+            }
+        }
     )
     out.write_text(html)
     return builder
 
 
 def main():
-    template = ENV.get_template('html/basic-template.html')
+    template = ENV.get_template('html/base.html')
     built: list[DirectoryBuilder] = []
 
     with ThreadPoolExecutor(len(TARGETS), thread_name_prefix='pygraph-') as executor:
@@ -104,7 +102,6 @@ def main():
         },
     )
     nx.barnes_hut(gravitationalConstant=-6000, avoidOverlap=0.75)
-
     for builder in built:
         repo = builder.repo
         user = str(builder.user)
@@ -137,16 +134,20 @@ def main():
         builder.delete_directory()
         print(f'cleaned up {repo}')
 
+    nx.spring_solve()
     out = Path('docs/ref/index.html')
     html = to_html(
         nx,
         template,
-        jinja={
-            'background': '#1f1f1f',
-            'font': 'JetBrains Mono',
-            'title': 'Home',
+        network={},
+        progressor={'enabled': True},
+        selectors={
+            'edge': {'enabled': False},
+            'node': {
+                'placeholder_text': 'Search Repos/Users',
+                'search_field': 'id',
+            },
         },
-        pygraph={'handlers': HANDLERS}
     )
     print('\nwriting index...')
     out.write_text(html)
