@@ -1,62 +1,412 @@
+
 <html>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Home</title>
-    <link
-      href="https://fonts.googleapis.com/css?family=JetBrains Mono"
-      rel="stylesheet"
-    />
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pygraph</title>
+    
+<!-- JetBrains Mono -->
+<link rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=JetBrains Mono"
+/>
 
-    <!-- FontAwesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
-      integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
 
-    <!-- Visjs-min -->
-    <script
-      type="text/javascript"
-      src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"
-    ></script>
-    <style type="text/css">
-      body {
-        font-family: "JetBrains Mono";font-size: 12px;
-      }
-      #pygraph {
-          width: 100%;
-          height: 100%;
-          border: 1px solid lightgray;
-          background-color:#1f1f1f;
-      }
-    </style>
+
+<!-- FontAwesome -->
+<link rel="stylesheet" crossorigin="anonymous" referrerpolicy="no-referrer"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+/>
+
+
+<!-- Visjs-min -->
+<script type="text/javascript"
+    src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"
+></script>
+
+
+<!-- Tom Select -->
+<link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" 
+/>
+<script 
+    src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js">
+</script>
+
+    
+
+
+
+<style type="text/css">
+    body{
+        font-family: "JetBrains Mono";
+        font-size: 12px;
+    }
+
+    #pygraph {
+        width: 100%;
+        height: 100%;
+        background-color:darkslategrey;
+    }
+    
+    .left {
+        z-index: 1;
+        position: fixed;
+        width: 45%;
+        left: 0;
+        padding: 20px;
+    }
+
+    .right {
+        z-index: 1;
+        position: fixed;
+        width: 45%;
+        right: 0;
+        padding: 20px;
+    }
+    
+
+    
+    
+    #progressContainer {
+        height: 20px;
+        width: 50%;
+        right: 25%;
+        bottom: 5%;
+        background-color: #ffffff5b;
+        border-radius: 5.5px;
+        overflow: hidden;
+        position: absolute;
+        visibility: hidden;
+        
+        z-index: 1;
+    }
+
+    #progressBar {
+        width: 0%;
+        height: 20px;
+        background-color: #4caf50ff;
+        z-index: 2;
+    }
+    
+</style>
   </head>
   <body>
     
+    
+
+<div>
+
+<div class="right">
+    <div class="d-inline-block">
+    <select id="tom-select-nodes" multiple autocomplete="on" placeholder="Search Repos/Users"></select>
+    </div>
+</div>
+
+
+</div>
+    
+    
+    <div id="progressContainer">
+    <div id="progressBar"></div>
+</div>
+    
     <div id="pygraph"></div>
-
+    
     <script type="text/javascript">
+      // Node Transformers
+let allNodes = () => network.body.data.nodes
+let getNodes = (nodeIds) => allNodes().get(nodeIds)
+let updateNodes = (nodeArray) => allNodes().updateOnly(nodeArray)
+
+// Edge Transformers
+let allEdges = () => network.body.data.edges
+let getEdges = (edgeIds) => allEdges().get(edgeIds)
+let edgesAtNode = (nodeId) => allEdges().get(network.getConnectedEdges(nodeId))
+let nodesAtEdge = (edge) => [edge.to, edge.from]
+let updateEdges = (edgeArray) => allEdges().updateOnly(edgeArray)
+
+// Network Transformers
+let setNetwork = (nodes, edges) => network.setData({ nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) })
+let getBaseData = () => ({ nodes: data.nodes, edges: data.edges })
+let resetNetwork = () => setNetwork(data.nodes.get(), data.edges.get())
+
+
+
+let openLink = (item) => (item?.link) && window.open(item?.link) || false
+let resolveLink = (event) => getNodes(event.nodes[0]) || getEdges(event.edges[0]) || undefined
+      const data = {
+    nodes:  new vis.DataSet([{"color": "#7C7C7CAB", "id": "user:hwelch-fle", "image": "https://github.com/hwelch-fle.png?size=100", "label": "hwelch-fle", "link": "https://github.com/hwelch-fle", "shadow": {"color": "#e863dc", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "hwelch-fle", "x": 735, "y": -402}, {"group": "hwelch-fle", "id": "repo:geo-grab", "label": "geo-grab", "link": "repo-graphs/hwelch-fle/geo-grab.html", "title": "geo-grab", "x": 820, "y": -394}, {"group": "hwelch-fle", "id": "repo:cimple", "label": "cimple", "link": "repo-graphs/hwelch-fle/cimple.html", "title": "cimple", "x": 678, "y": -449}, {"group": "hwelch-fle", "id": "repo:arcpie", "label": "arcpie", "link": "repo-graphs/hwelch-fle/arcpie.html", "title": "arcpie", "x": 675, "y": -367}, {"color": "#7C7C7CAB", "id": "user:ionelmc", "image": "https://github.com/ionelmc.png?size=100", "label": "ionelmc", "link": "https://github.com/ionelmc", "shadow": {"color": "#da76f1", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "ionelmc", "x": -386, "y": 142}, {"group": "ionelmc", "id": "repo:pytest-benchmark", "label": "pytest-benchmark", "link": "repo-graphs/ionelmc/pytest-benchmark.html", "title": "pytest-benchmark", "x": -439, "y": 187}, {"color": "#7C7C7CAB", "id": "user:encode", "image": "https://github.com/encode.png?size=100", "label": "encode", "link": "https://github.com/encode", "shadow": {"color": "#97a576", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "encode", "x": 420, "y": 766}, {"group": "encode", "id": "repo:httpx", "label": "httpx", "link": "repo-graphs/encode/httpx.html", "title": "httpx", "x": 441, "y": 835}, {"color": "#7C7C7CAB", "id": "user:pallets", "image": "https://github.com/pallets.png?size=100", "label": "pallets", "link": "https://github.com/pallets", "shadow": {"color": "#63f212", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "pallets", "x": -110, "y": 298}, {"group": "pallets", "id": "repo:click", "label": "click", "link": "repo-graphs/pallets/click.html", "title": "click", "x": -58, "y": 323}, {"group": "hwelch-fle", "id": "repo:plankapy", "label": "plankapy", "link": "repo-graphs/hwelch-fle/plankapy.html", "title": "plankapy", "x": 747, "y": -324}, {"group": "pallets", "id": "repo:jinja", "label": "jinja", "link": "repo-graphs/pallets/jinja.html", "title": "jinja", "x": -174, "y": 270}, {"group": "hwelch-fle", "id": "repo:pygraph", "label": "pygraph", "link": "repo-graphs/hwelch-fle/pygraph.html", "title": "pygraph", "x": 763, "y": -477}, {"color": "#7C7C7CAB", "id": "user:visjs", "image": "https://github.com/visjs.png?size=100", "label": "visjs", "link": "https://github.com/visjs", "shadow": {"color": "#fd961a", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "visjs", "x": -507, "y": 718}, {"group": "visjs", "id": "repo:vis-network", "label": "vis-network", "link": "repo-graphs/visjs/vis-network.html", "title": "vis-network", "x": -508, "y": 791}, {"color": "#7C7C7CAB", "id": "user:Qiskit", "image": "https://github.com/Qiskit.png?size=100", "label": "Qiskit", "link": "https://github.com/Qiskit", "shadow": {"color": "#37100a", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "Qiskit", "x": 279, "y": -981}, {"group": "Qiskit", "id": "repo:rustworkx", "label": "rustworkx", "link": "repo-graphs/Qiskit/rustworkx.html", "title": "rustworkx", "x": 227, "y": -959}, {"color": "#7C7C7CAB", "id": "user:pytest-dev", "image": "https://github.com/pytest-dev.png?size=100", "label": "pytest-dev", "link": "https://github.com/pytest-dev", "shadow": {"color": "#b0f8da", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "pytest-dev", "x": -947, "y": 687}, {"group": "pytest-dev", "id": "repo:pytest", "label": "pytest", "link": "repo-graphs/pytest-dev/pytest.html", "title": "pytest", "x": -1000, "y": 737}, {"color": "#7C7C7CAB", "id": "user:fastapi", "image": "https://github.com/fastapi.png?size=100", "label": "fastapi", "link": "https://github.com/fastapi", "shadow": {"color": "#0d32bc", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "fastapi", "x": -551, "y": -467}, {"group": "fastapi", "id": "repo:typer", "label": "typer", "link": "repo-graphs/fastapi/typer.html", "title": "typer", "x": -510, "y": -410}, {"group": "fastapi", "id": "repo:fastapi", "label": "fastapi", "link": "repo-graphs/fastapi/fastapi.html", "title": "fastapi", "x": -594, "y": -527}]),
+    edges: new vis.DataSet([{"from": "user:hwelch-fle", "to": "repo:geo-grab"}, {"from": "user:hwelch-fle", "to": "repo:cimple"}, {"from": "user:hwelch-fle", "to": "repo:arcpie"}, {"from": "user:ionelmc", "to": "repo:pytest-benchmark"}, {"from": "user:encode", "to": "repo:httpx"}, {"from": "user:pallets", "to": "repo:click"}, {"from": "user:hwelch-fle", "to": "repo:plankapy"}, {"from": "user:pallets", "to": "repo:jinja"}, {"from": "user:hwelch-fle", "to": "repo:pygraph"}, {"from": "user:visjs", "to": "repo:vis-network"}, {"from": "user:Qiskit", "to": "repo:rustworkx"}, {"from": "user:pytest-dev", "to": "repo:pytest"}, {"from": "user:fastapi", "to": "repo:typer"}, {"from": "user:fastapi", "to": "repo:fastapi"}]),
+}
+const options = {
+  "autoResize": true,
+  "clickToUse": false,
+  "configure": {
+    "enabled": true,
+    "filter": true,
+    "showButton": true
+  },
+  "edges": {
+    "arrows": "to",
+    "length": 200
+  },
+  "groups": {
+    "Qiskit": {
+      "color": "#37100a"
+    },
+    "encode": {
+      "color": "#97a576"
+    },
+    "fastapi": {
+      "color": "#0d32bc"
+    },
+    "hwelch-fle": {
+      "color": "#e863dc"
+    },
+    "ionelmc": {
+      "color": "#da76f1"
+    },
+    "pallets": {
+      "color": "#63f212"
+    },
+    "pytest-dev": {
+      "color": "#b0f8da"
+    },
+    "useDefaultGroups": true,
+    "visjs": {
+      "color": "#fd961a"
+    }
+  },
+  "height": "100%",
+  "interaction": {
+    "dragNodes": true,
+    "dragView": true,
+    "hideEdgesOnDrag": false,
+    "hideEdgesOnZoom": false,
+    "hideNodesOnDrag": false,
+    "hover": false,
+    "hoverConnectedEdges": true,
+    "keyboard": {
+      "autoFocus": true,
+      "bindToWindow": true,
+      "enabled": false,
+      "speed": {
+        "x": 1,
+        "y": 1,
+        "zoom": 0.02
+      }
+    },
+    "multiselect": false,
+    "navigationButtons": false,
+    "selectConnectedEdges": true,
+    "selectable": true,
+    "tooltipDelay": 300,
+    "zoomSpeed": 1,
+    "zoomView": true
+  },
+  "layout": {
+    "clusterThreshold": 150,
+    "hierarchical": {
+      "blockShifting": true,
+      "direction": "UD",
+      "edgeMinimization": true,
+      "enabled": false,
+      "levelSeparation": 150,
+      "nodeSpacing": 100,
+      "parentCentralization": true,
+      "sortMethod": "hubsize",
+      "treeSpacing": 200
+    },
+    "improvedLayout": true
+  },
+  "locale": "en",
+  "locales": {},
+  "manipulation": {
+    "addEdge": true,
+    "addNode": true,
+    "controlNodeStyle": {
+      "borderWidth": 2,
+      "borderWidthSelected": 2,
+      "color": {
+        "background": "#ff0000",
+        "border": "#3c3c3c",
+        "highlight": {
+          "background": "#07f968",
+          "border": "#3c3c3c"
+        }
+      },
+      "shape": "dot",
+      "size": 6
+    },
+    "deleteEdge": true,
+    "deleteNode": true,
+    "editEdge": true,
+    "enabled": false,
+    "initiallyActive": true
+  },
+  "nodes": {
+    "font": {
+      "color": "#ffffff",
+      "face": "JetBrains Mono",
+      "strokeColor": "#434343",
+      "strokeWidth": 3
+    },
+    "shape": "star"
+  },
+  "physics": {
+    "adaptiveTimestep": true,
+    "barnesHut": {
+      "avoidOverlap": 0.75,
+      "gravitationalConstant": -6000
+    },
+    "enabled": true,
+    "forceAtlas2Based": {
+      "avoidOverlap": 0.0,
+      "centralGravity": 0.01,
+      "damping": 0.4,
+      "gravitationalConstant": -50,
+      "springConstant": 0.08,
+      "springLength": 100,
+      "theta": 0.5
+    },
+    "hierarchicalRepulsion": {
+      "avoidOverlap": 0.0,
+      "centralGravity": 0.01,
+      "damping": 0.09,
+      "nodeDistance": 120,
+      "springConstant": 0.01,
+      "springLength": 100
+    },
+    "maxVelocity": 50,
+    "minVelocity": 0.1,
+    "repulsion": {
+      "centralGravity": 0.2,
+      "damping": 0.09,
+      "nodeDistance": 100,
+      "springConstant": 0.05,
+      "springLength": 200
+    },
+    "solver": "barnesHut",
+    "stabilization": {
+      "enabled": true,
+      "fit": true,
+      "iterations": 1000,
+      "onlyDynamicEdges": false,
+      "updateInterval": 50
+    },
+    "timestep": 0.5,
+    "wind": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "width": "100%"
+}
+const network = new vis.Network(document.getElementById('pygraph'), data, options);
       
-      const network = new vis.Network(
-    document.getElementById('pygraph'),
-    {
-        nodes: new vis.DataSet([{"color": "#7C7C7CAB", "id": "user:hwelch-fle", "image": "https://github.com/hwelch-fle.png?size=100", "label": "hwelch-fle", "link": "https://github.com/hwelch-fle", "shadow": {"color": "#e863dc", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "hwelch-fle"}, {"group": "hwelch-fle", "id": "repo:geo-grab", "label": "geo-grab", "link": "repo-graphs/hwelch-fle/geo-grab.html", "title": "geo-grab"}, {"group": "hwelch-fle", "id": "repo:cimple", "label": "cimple", "link": "repo-graphs/hwelch-fle/cimple.html", "title": "cimple"}, {"group": "hwelch-fle", "id": "repo:arcpie", "label": "arcpie", "link": "repo-graphs/hwelch-fle/arcpie.html", "title": "arcpie"}, {"color": "#7C7C7CAB", "id": "user:ionelmc", "image": "https://github.com/ionelmc.png?size=100", "label": "ionelmc", "link": "https://github.com/ionelmc", "shadow": {"color": "#da76f1", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "ionelmc"}, {"group": "ionelmc", "id": "repo:pytest-benchmark", "label": "pytest-benchmark", "link": "repo-graphs/ionelmc/pytest-benchmark.html", "title": "pytest-benchmark"}, {"group": "hwelch-fle", "id": "repo:pygraph", "label": "pygraph", "link": "repo-graphs/hwelch-fle/pygraph.html", "title": "pygraph"}, {"color": "#7C7C7CAB", "id": "user:pallets", "image": "https://github.com/pallets.png?size=100", "label": "pallets", "link": "https://github.com/pallets", "shadow": {"color": "#63f212", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "pallets"}, {"group": "pallets", "id": "repo:jinja", "label": "jinja", "link": "repo-graphs/pallets/jinja.html", "title": "jinja"}, {"color": "#7C7C7CAB", "id": "user:encode", "image": "https://github.com/encode.png?size=100", "label": "encode", "link": "https://github.com/encode", "shadow": {"color": "#97a576", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "encode"}, {"group": "encode", "id": "repo:httpx", "label": "httpx", "link": "repo-graphs/encode/httpx.html", "title": "httpx"}, {"group": "hwelch-fle", "id": "repo:plankapy", "label": "plankapy", "link": "repo-graphs/hwelch-fle/plankapy.html", "title": "plankapy"}, {"group": "pallets", "id": "repo:click", "label": "click", "link": "repo-graphs/pallets/click.html", "title": "click"}, {"color": "#7C7C7CAB", "id": "user:visjs", "image": "https://github.com/visjs.png?size=100", "label": "visjs", "link": "https://github.com/visjs", "shadow": {"color": "#fd961a", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "visjs"}, {"group": "visjs", "id": "repo:vis-network", "label": "vis-network", "link": "repo-graphs/visjs/vis-network.html", "title": "vis-network"}, {"color": "#7C7C7CAB", "id": "user:Qiskit", "image": "https://github.com/Qiskit.png?size=100", "label": "Qiskit", "link": "https://github.com/Qiskit", "shadow": {"color": "#37100a", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "Qiskit"}, {"group": "Qiskit", "id": "repo:rustworkx", "label": "rustworkx", "link": "repo-graphs/Qiskit/rustworkx.html", "title": "rustworkx"}, {"color": "#7C7C7CAB", "id": "user:pytest-dev", "image": "https://github.com/pytest-dev.png?size=100", "label": "pytest-dev", "link": "https://github.com/pytest-dev", "shadow": {"color": "#b0f8da", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "pytest-dev"}, {"group": "pytest-dev", "id": "repo:pytest", "label": "pytest", "link": "repo-graphs/pytest-dev/pytest.html", "title": "pytest"}, {"color": "#7C7C7CAB", "id": "user:fastapi", "image": "https://github.com/fastapi.png?size=100", "label": "fastapi", "link": "https://github.com/fastapi", "shadow": {"color": "#0d32bc", "enabled": true, "size": 5, "x": 3, "y": 3}, "shape": "circularImage", "shapeProperties": {"borderRadius": 10, "useBorderWithImage": true}, "title": "fastapi"}, {"group": "fastapi", "id": "repo:typer", "label": "typer", "link": "repo-graphs/fastapi/typer.html", "title": "typer"}, {"group": "fastapi", "id": "repo:fastapi", "label": "fastapi", "link": "repo-graphs/fastapi/fastapi.html", "title": "fastapi"}]), 
-        edges: new vis.DataSet([{"from": "user:hwelch-fle", "to": "repo:geo-grab"}, {"from": "user:hwelch-fle", "to": "repo:cimple"}, {"from": "user:hwelch-fle", "to": "repo:arcpie"}, {"from": "user:ionelmc", "to": "repo:pytest-benchmark"}, {"from": "user:hwelch-fle", "to": "repo:pygraph"}, {"from": "user:pallets", "to": "repo:jinja"}, {"from": "user:encode", "to": "repo:httpx"}, {"from": "user:hwelch-fle", "to": "repo:plankapy"}, {"from": "user:pallets", "to": "repo:click"}, {"from": "user:visjs", "to": "repo:vis-network"}, {"from": "user:Qiskit", "to": "repo:rustworkx"}, {"from": "user:pytest-dev", "to": "repo:pytest"}, {"from": "user:fastapi", "to": "repo:typer"}, {"from": "user:fastapi", "to": "repo:fastapi"}]),
-    }, 
-    {"autoResize": true, "clickToUse": false, "configure": {"enabled": true, "filter": true, "showButton": true}, "edges": {"arrows": "to", "length": 200}, "groups": {"Qiskit": {"color": "#37100a"}, "encode": {"color": "#97a576"}, "fastapi": {"color": "#0d32bc"}, "hwelch-fle": {"color": "#e863dc"}, "ionelmc": {"color": "#da76f1"}, "pallets": {"color": "#63f212"}, "pytest-dev": {"color": "#b0f8da"}, "useDefaultGroups": true, "visjs": {"color": "#fd961a"}}, "height": "100%", "interaction": {"dragNodes": true, "dragView": true, "hideEdgesOnDrag": false, "hideEdgesOnZoom": false, "hideNodesOnDrag": false, "hover": false, "hoverConnectedEdges": true, "keyboard": {"autoFocus": true, "bindToWindow": true, "enabled": false, "speed": {"x": 1, "y": 1, "zoom": 0.02}}, "multiselect": false, "navigationButtons": false, "selectConnectedEdges": true, "selectable": true, "tooltipDelay": 300, "zoomSpeed": 1, "zoomView": true}, "layout": {"clusterThreshold": 150, "hierarchical": {"blockShifting": true, "direction": "UD", "edgeMinimization": true, "enabled": false, "levelSeparation": 150, "nodeSpacing": 100, "parentCentralization": true, "sortMethod": "hubsize", "treeSpacing": 200}, "improvedLayout": true}, "locale": "en", "locales": {}, "manipulation": {"addEdge": true, "addNode": true, "controlNodeStyle": {"borderWidth": 2, "borderWidthSelected": 2, "color": {"background": "#ff0000", "border": "#3c3c3c", "highlight": {"background": "#07f968", "border": "#3c3c3c"}}, "shape": "dot", "size": 6}, "deleteEdge": true, "deleteNode": true, "editEdge": true, "enabled": false, "initiallyActive": true}, "nodes": {"font": {"color": "#ffffff", "face": "JetBrains Mono", "strokeColor": "#434343", "strokeWidth": 3}, "shape": "star"}, "physics": {"adaptiveTimestep": true, "barnesHut": {"avoidOverlap": 0.75, "gravitationalConstant": -6000}, "enabled": true, "forceAtlas2Based": {"avoidOverlap": 0.0, "centralGravity": 0.01, "damping": 0.4, "gravitationalConstant": -50, "springConstant": 0.08, "springLength": 100, "theta": 0.5}, "hierarchicalRepulsion": {"avoidOverlap": 0.0, "centralGravity": 0.01, "damping": 0.09, "nodeDistance": 120, "springConstant": 0.01, "springLength": 100}, "maxVelocity": 50, "minVelocity": 0.1, "repulsion": {"centralGravity": 0.2, "damping": 0.09, "nodeDistance": 100, "springConstant": 0.05, "springLength": 200}, "solver": "barnesHut", "stabilization": {"enabled": true, "fit": true, "iterations": 1000, "onlyDynamicEdges": false, "updateInterval": 50}, "timestep": 0.5, "wind": {"x": 0, "y": 0}}, "width": "100%"}
-);
+      network.on('hoverEdge', (event) => { updateEdges(getEdges([event.edge]).map(showLabel)) });
+network.on('blurEdge', (event) => { updateEdges(getEdges([event.edge]).map(hideLabel)) });
+network.on('hoverNode', (event) => { updateEdges(edgesAtNode(event.node).map(showLabel)) });
+network.on('blurNode', (event) => { updateEdges(edgesAtNode(event.node).map(hideLabel)) });
+      
+      
+      // Progress Bar
+const progressContainer = document.getElementById('progressContainer')
+const progressBar = document.getElementById('progressBar')
+
+let setProgressBar = (visibility, percent) => {
+    progressContainer.style.visibility = visibility
+    progressBar.style.width = `${percent}%`
+};
+let hideProgressBar = () => setProgressBar('hidden', 0);
+let showProgressBar = (percent) => setProgressBar('visible', percent);
+
+network.on('stabilizationProgress', (event) => {showProgressBar((event.iterations / event.total) * 100)});
+network.on('stabilizationIterationsDone', hideProgressBar);
+network.on('stabilized', hideProgressBar);
+      
+      
+      
 
 
-network.on('doubleClick', function (event) {
-    const node = network.body.data.nodes.get(event.nodes[0]);
-    if (node) { window.open(node.link) };
+
+
+
+let changeNodes = (selection) => {
+    if (selection.length == 0) { resetNetwork(); return; }
+    
+    var { nodes, edges } = getBaseData()
+    edges = edges.get({
+        filter: (edge) =>
+        selection.includes(edge.to) || selection.includes(edge.from),
+    })
+    const nodeIds = [
+        ...new Set(edges.map((edge) => [edge.to, edge.from]).flat()),
+    ]
+    nodes = nodes.get(nodeIds)
+    setNetwork(nodes, edges)
+};
+
+
+
+
+const collator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
 });
 
 
+const tomSelectNodes = new TomSelect("#tom-select-nodes", {
+  maxItems: null,
+  maxOptions: 100,
+  valueField: "id",
+  labelField: "label",
+  searchField: "id",
+  sortField: "label",
+  options: allNodes()
+    
+    .get(),
+    
+  create: false,
+  onChange: changeNodes,
+  
+  onClear: resetNetwork,
+  
+  plugins: ['remove_button', 'clear_button'],
+});
+
+
+
+
+// Selection Transformers
+let addItem = (selector, item) => item ? selector.addItem(item, false) || true : false
+let addNodeSelection = (item) => addItem(tomSelectNodes, item?.id)
+let addEdgeSelection = (item) =>  undefined 
+let updateSelection = (event) => addNodeSelection(getNodes(event.nodes[0])) || addEdgeSelection(getEdges(event.edges[0]))
+let clearFilters = () => {
+  
+  tomSelectNodes.clear(false);
+}
       
+      
+      network.on("doubleClick", (event) => {
+  openLink(resolveLink(event))
+  
+  || clearFilters();
+  
+});
+
+var clickStack = [];
+network.on("click", async (event) => {
+  const clickedAt = new Date().valueOf();
+  clickStack.push(clickedAt);
+  await new Promise((r) => setTimeout(r, 200));
+  if (clickStack.pop() == clickedAt) {
+    
+    updateSelection(event);
+    
+  }
+});
     </script>
   </body>
 </html>
