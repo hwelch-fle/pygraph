@@ -59,11 +59,11 @@ def build_graph(url: str) -> DirectoryBuilder:
     html = to_html(
         nx,
         template,
-        network={},
+        network={'title': builder.repo},
         progressor={'enabled': True},
         selectors={
             'node': {
-                'placeholder_text': 'Search Files',
+                'placeholder_text': 'Search',
                 'search_field': 'id',
                 'label_field': 'id',
             },
@@ -139,12 +139,12 @@ def main():
     html = to_html(
         nx,
         template,
-        network={},
+        network={'title': 'Home'},
         progressor={'enabled': True},
         selectors={
             'edge': {'enabled': False},
             'node': {
-                'placeholder_text': 'Search Repos/Users',
+                'placeholder_text': 'Search',
                 'search_field': 'id',
             },
         },
