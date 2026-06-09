@@ -1,12 +1,6 @@
-const network = new vis.Network(
-    document.getElementById('pygraph'),
-    {
-        nodes: new vis.DataSet({{ data["nodes"] | tojson }}), 
-        edges: new vis.DataSet({{ data["edges"] | tojson }}),
-    }, 
-    {{ data["options"] | tojson }}
-);
-
-{% for handler in pygraph["handlers"] | default ([]) %}
-network.{{ handler }}
-{% endfor %}
+const data = {
+    nodes:  new vis.DataSet({{ network.nodes|tojson() }}),
+    edges: new vis.DataSet({{ network.edges|tojson() }}),
+}
+const options = {{ network.options|tojson(indent=2) }}
+const network = new vis.Network(document.getElementById('pygraph'), data, options);

@@ -1,0 +1,49 @@
+{# Schema
+    selectors: 
+      `see js/tom_select.js`
+    progressor: 
+      `see js/progressor.js`
+      style: see html/head_styles.html
+    network:
+      title: str (default: "pygraph")
+      nodes: [Node, ...]
+      nodes: [Edge, ...]
+      options: NetworkOptions
+      google_fonts: list[str] (default: ['JetBrains Mono'])
+      font_awesome: bool (default: True)
+      hover_edge_labels: bool (default: True)
+      style: `see html/head_styles.html`
+#}
+<html>
+  <head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{network.title|default('pygraph')}}</title>
+    {% include 'html/head_scripts.html' %}
+    {% include 'html/head_styles.html' %}
+  </head>
+  <body>
+    {% if selectors %}
+    {% include "html/selectors.html" %}
+    {% endif %}
+    {% if progressor %}
+    {% include "html/progressor.html" %}
+    {% endif %}
+    <div id="pygraph"></div>
+    {% block selectors %}{% endblock %}
+    <script type="text/javascript">
+      {% include "js/helpers.js" %}
+      {% include "js/create_network.js" %}
+      {% if hover_edge_labels|default(True) %}
+      {% include "js/hover_labels.js" %}
+      {% endif %}
+      {% if progressor %}
+      {% include "js/progressor.js" %}
+      {% endif %}
+      {% if selectors %}
+      {% include "js/tom_select.js" %}
+      {% endif %}
+      {# TODO: This  needs to be more customizable #}
+      {% include "js/click_interaction.js" %}
+    </script>
+  </body>
+</html>

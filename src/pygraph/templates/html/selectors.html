@@ -1,0 +1,18 @@
+{% set node = selectors.node or {}%}
+{% set edge = selectors.edge or {}%}
+<div>
+{% if node.enabled|default(True) %}
+<div class="right">
+    <div class="d-inline-block">
+    <select id="tom-select-nodes" multiple autocomplete="on" placeholder="{{node.placeholder_text|default('Filter Nodes')}}"></select>
+    </div>
+</div>
+{% endif %}
+{% if edge.enabled|default(True) %}
+<div class="left">
+    <div class="d-inline-block">
+    <select id="tom-select-edges" multiple autocomplete="on" placeholder="{{edge.placeholder_text|default('Filter Edges')}}"></select>
+    </div>
+</div>
+{% endif %}
+</div>
