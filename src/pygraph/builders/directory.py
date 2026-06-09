@@ -1,6 +1,6 @@
 import fnmatch
 import hashlib
-import subprocess  # noqa: S404
+import subprocess
 import sys
 import tempfile
 from collections.abc import (
