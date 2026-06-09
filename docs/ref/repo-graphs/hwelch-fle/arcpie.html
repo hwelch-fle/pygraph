@@ -1,62 +1,401 @@
+
 <html>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>arcpie</title>
-    <link
-      href="https://fonts.googleapis.com/css?family=JetBrains Mono"
-      rel="stylesheet"
-    />
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pygraph</title>
+    
+<!-- JetBrains Mono -->
+<link rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=JetBrains Mono"
+/>
 
-    <!-- FontAwesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
-      integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
 
-    <!-- Visjs-min -->
-    <script
-      type="text/javascript"
-      src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"
-    ></script>
-    <style type="text/css">
-      body {
-        font-family: "JetBrains Mono";font-size: 12px;
-      }
-      #pygraph {
-          width: 100%;
-          height: 100%;
-          border: 1px solid lightgray;
-          background-color:#1f1f1f;
-      }
-    </style>
+
+<!-- FontAwesome -->
+<link rel="stylesheet" crossorigin="anonymous" referrerpolicy="no-referrer"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+/>
+
+
+<!-- Visjs-min -->
+<script type="text/javascript"
+    src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"
+></script>
+
+
+<!-- Tom Select -->
+<link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" 
+/>
+<script 
+    src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js">
+</script>
+
+    
+
+
+
+<style type="text/css">
+    body{
+        font-family: "JetBrains Mono";
+        font-size: 12px;
+    }
+
+    #pygraph {
+        width: 100%;
+        height: 100%;
+        background-color:darkslategrey;
+    }
+    
+    .left {
+        z-index: 1;
+        position: fixed;
+        width: 45%;
+        left: 0;
+        padding: 20px;
+    }
+
+    .right {
+        z-index: 1;
+        position: fixed;
+        width: 45%;
+        right: 0;
+        padding: 20px;
+    }
+    
+
+    
+    
+    #progressContainer {
+        height: 20px;
+        width: 50%;
+        right: 25%;
+        bottom: 5%;
+        background-color: #ffffff5b;
+        border-radius: 5.5px;
+        overflow: hidden;
+        position: absolute;
+        visibility: hidden;
+        
+        z-index: 1;
+    }
+
+    #progressBar {
+        width: 0%;
+        height: 20px;
+        background-color: #4caf50ff;
+        z-index: 2;
+    }
+    
+</style>
   </head>
   <body>
     
+    
+
+<div>
+
+<div class="right">
+    <div class="d-inline-block">
+    <select id="tom-select-nodes" multiple autocomplete="on" placeholder="Search Files"></select>
+    </div>
+</div>
+
+
+</div>
+    
+    
+    <div id="progressContainer">
+    <div id="progressBar"></div>
+</div>
+    
     <div id="pygraph"></div>
-
+    
     <script type="text/javascript">
+      // Node Transformers
+let allNodes = () => network.body.data.nodes
+let getNodes = (nodeIds) => allNodes().get(nodeIds)
+let updateNodes = (nodeArray) => allNodes().updateOnly(nodeArray)
+
+// Edge Transformers
+let allEdges = () => network.body.data.edges
+let getEdges = (edgeIds) => allEdges().get(edgeIds)
+let edgesAtNode = (nodeId) => allEdges().get(network.getConnectedEdges(nodeId))
+let nodesAtEdge = (edge) => [edge.to, edge.from]
+let updateEdges = (edgeArray) => allEdges().updateOnly(edgeArray)
+
+// Network Transformers
+let setNetwork = (nodes, edges) => network.setData({ nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) })
+let getBaseData = () => ({ nodes: data.nodes, edges: data.edges })
+let resetNetwork = () => setNetwork(data.nodes.get(), data.edges.get())
+
+
+
+let openLink = (item) => (item?.link) && window.open(item?.link) || false
+let resolveLink = (event) => getNodes(event.nodes[0]) || getEdges(event.edges[0]) || undefined
+      const data = {
+    nodes:  new vis.DataSet([{"fixed": true, "group": "directory", "icon": {"code": "\uf07b", "color": "gold", "size": 100}, "id": ".", "label": "arcpie", "level": 0, "link": "https://github.com/hwelch-fle/arcpie", "title": "arcpie", "x": 32, "y": 61}, {"group": "file", "id": ".gitignore", "label": ".gitignore", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/.gitignore", "title": ".gitignore", "x": -10, "y": 168}, {"group": "file", "id": ".python-version", "label": ".python-version", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/.python-version", "title": ".python-version", "x": 125, "y": 167}, {"group": "file", "id": "LICENSE", "label": "LICENSE", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/LICENSE", "title": "LICENSE", "x": 124, "y": -66}, {"group": ".yml", "id": "mkdocs.yml", "label": "mkdocs.yml", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/mkdocs.yml", "title": "mkdocs.yml", "x": 164, "y": 49}, {"group": ".toml", "id": "pyproject.toml", "label": "pyproject.toml", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/pyproject.toml", "title": "pyproject.toml", "x": -114, "y": 25}, {"group": ".md", "id": "README.md", "label": "README.md", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/README.md", "title": "README.md", "x": -123, "y": 133}, {"group": ".lock", "id": "uv.lock", "label": "uv.lock", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/uv.lock", "title": "uv.lock", "x": -18, "y": -66}, {"group": "directory", "id": ".github", "label": ".github", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/.github", "title": ".github", "x": 257, "y": 9}, {"group": "directory", "id": ".github/workflows", "label": "workflows", "level": 2, "link": "https://github.com/hwelch-fle/arcpie/tree/master/.github/workflows", "title": ".github/workflows", "x": 438, "y": -31}, {"group": ".yml", "id": ".github/workflows/docs.yml", "label": "docs.yml", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/.github/workflows/docs.yml", "title": ".github/workflows/docs.yml", "x": 554, "y": -47}, {"group": "directory", "id": "docs", "label": "docs", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs", "title": "docs", "x": 42, "y": 397}, {"group": ".md", "id": "docs/index.md", "label": "index.md", "level": 2, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/index.md", "title": "docs/index.md", "x": 148, "y": 344}, {"group": "directory", "id": "docs/examples", "label": "examples", "level": 2, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/examples", "title": "docs/examples", "x": 118, "y": 625}, {"group": ".md", "id": "docs/examples/1_getting-started.md", "label": "1_getting-started.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/examples/1_getting-started.md", "title": "docs/examples/1_getting-started.md", "x": 227, "y": 748}, {"group": ".md", "id": "docs/examples/2_feature-interaction.md", "label": "2_feature-interaction.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/examples/2_feature-interaction.md", "title": "docs/examples/2_feature-interaction.md", "x": 146, "y": 794}, {"group": "directory", "id": "docs/modules", "label": "modules", "level": 2, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules", "title": "docs/modules", "x": -40, "y": 638}, {"group": ".md", "id": "docs/modules/cursor.md", "label": "cursor.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/cursor.md", "title": "docs/modules/cursor.md", "x": -96, "y": 803}, {"group": ".md", "id": "docs/modules/database.md", "label": "database.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/database.md", "title": "docs/modules/database.md", "x": -20, "y": 834}, {"group": ".md", "id": "docs/modules/diff.md", "label": "diff.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/diff.md", "title": "docs/modules/diff.md", "x": -202, "y": 780}, {"group": ".md", "id": "docs/modules/featureclass.md", "label": "featureclass.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/featureclass.md", "title": "docs/modules/featureclass.md", "x": 27, "y": 740}, {"group": ".md", "id": "docs/modules/network.md", "label": "network.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/network.md", "title": "docs/modules/network.md", "x": -66, "y": 517}, {"group": ".md", "id": "docs/modules/project.md", "label": "project.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/project.md", "title": "docs/modules/project.md", "x": -191, "y": 545}, {"group": ".md", "id": "docs/modules/toolbox.md", "label": "toolbox.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/toolbox.md", "title": "docs/modules/toolbox.md", "x": -231, "y": 649}, {"group": ".md", "id": "docs/modules/utils.md", "label": "utils.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/utils.md", "title": "docs/modules/utils.md", "x": -147, "y": 687}, {"group": "directory", "id": "docs/modules/schema", "label": "schema", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/schema", "title": "docs/modules/schema", "x": 219, "y": 612}, {"group": ".md", "id": "docs/modules/schema/domain.md", "label": "domain.md", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/schema/domain.md", "title": "docs/modules/schema/domain.md", "x": 348, "y": 726}, {"group": ".md", "id": "docs/modules/schema/field.md", "label": "field.md", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/schema/field.md", "title": "docs/modules/schema/field.md", "x": 359, "y": 523}, {"group": ".md", "id": "docs/modules/schema/layer.md", "label": "layer.md", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/schema/layer.md", "title": "docs/modules/schema/layer.md", "x": 194, "y": 511}, {"group": ".md", "id": "docs/modules/schema/workspace.md", "label": "workspace.md", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/schema/workspace.md", "title": "docs/modules/schema/workspace.md", "x": 387, "y": 632}, {"group": "directory", "id": "src", "label": "src", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src", "title": "src", "x": -51, "y": -214}, {"group": "directory", "id": "src/arcpie", "label": "arcpie", "level": 2, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie", "title": "src/arcpie", "x": -132, "y": -526}, {"group": ".py", "id": "src/arcpie/cursor.py", "label": "cursor.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/cursor.py", "title": "src/arcpie/cursor.py", "x": -240, "y": -474}, {"group": ".py", "id": "src/arcpie/database.py", "label": "database.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/database.py", "title": "src/arcpie/database.py", "x": -126, "y": -378}, {"group": ".py", "id": "src/arcpie/diff.py", "label": "diff.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/diff.py", "title": "src/arcpie/diff.py", "x": -266, "y": -674}, {"group": ".py", "id": "src/arcpie/featureclass.py", "label": "featureclass.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/featureclass.py", "title": "src/arcpie/featureclass.py", "x": -223, "y": -603}, {"group": ".py", "id": "src/arcpie/gdb_loader.py", "label": "gdb_loader.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/gdb_loader.py", "title": "src/arcpie/gdb_loader.py", "x": -308, "y": -571}, {"group": ".py", "id": "src/arcpie/network.py", "label": "network.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/network.py", "title": "src/arcpie/network.py", "x": -39, "y": -453}, {"group": ".py", "id": "src/arcpie/project.py", "label": "project.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/project.py", "title": "src/arcpie/project.py", "x": -18, "y": -636}, {"group": ".typed", "id": "src/arcpie/py.typed", "label": "py.typed", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/py.typed", "title": "src/arcpie/py.typed", "x": -325, "y": -464}, {"group": ".py", "id": "src/arcpie/toolbox.py", "label": "toolbox.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/toolbox.py", "title": "src/arcpie/toolbox.py", "x": -111, "y": -659}, {"group": ".py", "id": "src/arcpie/utils.py", "label": "utils.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/utils.py", "title": "src/arcpie/utils.py", "x": 46, "y": -571}, {"group": ".py", "id": "src/arcpie/_types.py", "label": "_types.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/_types.py", "title": "src/arcpie/_types.py", "x": 50, "y": -455}, {"group": ".py", "id": "src/arcpie/__init__.py", "label": "__init__.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/__init__.py", "title": "src/arcpie/__init__.py", "x": -233, "y": -377}, {"group": "directory", "id": "src/arcpie/schema", "label": "schema", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/schema", "title": "src/arcpie/schema", "x": -119, "y": -830}, {"group": ".py", "id": "src/arcpie/schema/domain.py", "label": "domain.py", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/schema/domain.py", "title": "src/arcpie/schema/domain.py", "x": 32, "y": -833}, {"group": ".py", "id": "src/arcpie/schema/field.py", "label": "field.py", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/schema/field.py", "title": "src/arcpie/schema/field.py", "x": -104, "y": -1000}, {"group": ".py", "id": "src/arcpie/schema/layer.py", "label": "layer.py", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/schema/layer.py", "title": "src/arcpie/schema/layer.py", "x": -274, "y": -864}, {"group": ".py", "id": "src/arcpie/schema/workspace.py", "label": "workspace.py", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/schema/workspace.py", "title": "src/arcpie/schema/workspace.py", "x": -198, "y": -973}, {"group": ".py", "id": "src/arcpie/schema/__init__.py", "label": "__init__.py", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/schema/__init__.py", "title": "src/arcpie/schema/__init__.py", "x": -11, "y": -954}]),
+    edges: new vis.DataSet([{"from": ".", "to": ".gitignore"}, {"from": ".", "to": ".python-version"}, {"from": ".", "to": "LICENSE"}, {"from": ".", "to": "mkdocs.yml"}, {"from": ".", "to": "pyproject.toml"}, {"from": ".", "to": "README.md"}, {"from": ".", "to": "uv.lock"}, {"from": ".", "to": ".github"}, {"from": ".github", "to": ".github/workflows"}, {"from": ".github/workflows", "to": ".github/workflows/docs.yml"}, {"from": ".", "to": "docs"}, {"from": "docs", "to": "docs/index.md"}, {"from": "docs", "to": "docs/examples"}, {"from": "docs/examples", "to": "docs/examples/1_getting-started.md"}, {"from": "docs/examples", "to": "docs/examples/2_feature-interaction.md"}, {"from": "docs", "to": "docs/modules"}, {"from": "docs/modules", "to": "docs/modules/cursor.md"}, {"from": "docs/modules", "to": "docs/modules/database.md"}, {"from": "docs/modules", "to": "docs/modules/diff.md"}, {"from": "docs/modules", "to": "docs/modules/featureclass.md"}, {"from": "docs/modules", "to": "docs/modules/network.md"}, {"from": "docs/modules", "to": "docs/modules/project.md"}, {"from": "docs/modules", "to": "docs/modules/toolbox.md"}, {"from": "docs/modules", "to": "docs/modules/utils.md"}, {"from": "docs/modules", "to": "docs/modules/schema"}, {"from": "docs/modules/schema", "to": "docs/modules/schema/domain.md"}, {"from": "docs/modules/schema", "to": "docs/modules/schema/field.md"}, {"from": "docs/modules/schema", "to": "docs/modules/schema/layer.md"}, {"from": "docs/modules/schema", "to": "docs/modules/schema/workspace.md"}, {"from": ".", "to": "src"}, {"from": "src", "to": "src/arcpie"}, {"from": "src/arcpie", "to": "src/arcpie/cursor.py"}, {"from": "src/arcpie", "to": "src/arcpie/database.py"}, {"from": "src/arcpie", "to": "src/arcpie/diff.py"}, {"from": "src/arcpie", "to": "src/arcpie/featureclass.py"}, {"from": "src/arcpie", "to": "src/arcpie/gdb_loader.py"}, {"from": "src/arcpie", "to": "src/arcpie/network.py"}, {"from": "src/arcpie", "to": "src/arcpie/project.py"}, {"from": "src/arcpie", "to": "src/arcpie/py.typed"}, {"from": "src/arcpie", "to": "src/arcpie/toolbox.py"}, {"from": "src/arcpie", "to": "src/arcpie/utils.py"}, {"from": "src/arcpie", "to": "src/arcpie/_types.py"}, {"from": "src/arcpie", "to": "src/arcpie/__init__.py"}, {"from": "src/arcpie", "to": "src/arcpie/schema"}, {"from": "src/arcpie/schema", "to": "src/arcpie/schema/domain.py"}, {"from": "src/arcpie/schema", "to": "src/arcpie/schema/field.py"}, {"from": "src/arcpie/schema", "to": "src/arcpie/schema/layer.py"}, {"from": "src/arcpie/schema", "to": "src/arcpie/schema/workspace.py"}, {"from": "src/arcpie/schema", "to": "src/arcpie/schema/__init__.py"}]),
+}
+const options = {
+  "autoResize": true,
+  "clickToUse": false,
+  "configure": {
+    "filter": false
+  },
+  "edges": {
+    "arrowStrikethrough": true,
+    "arrows": "to",
+    "color": {
+      "hover": "gold",
+      "inherit": "to"
+    },
+    "endPointOffset": {
+      "to": -5
+    },
+    "hoverWidth": 5,
+    "length": 50,
+    "width": 3
+  },
+  "groups": {
+    ".lock": {
+      "icon": {
+        "code": "\uf023",
+        "color": "red"
+      },
+      "shape": "icon"
+    },
+    ".md": {
+      "icon": {
+        "code": "\uf60f",
+        "color": "black"
+      },
+      "shape": "icon"
+    },
+    ".py": {
+      "icon": {
+        "code": "\uf3e2",
+        "color": "#ffc42d"
+      },
+      "shape": "icon"
+    },
+    ".toml": {
+      "icon": {
+        "code": "\uf1c9",
+        "color": "#86431a"
+      },
+      "shape": "icon"
+    },
+    ".typed": {
+      "icon": {
+        "code": "\uf1c9",
+        "color": "#3aa5e4"
+      },
+      "shape": "icon"
+    },
+    ".yml": {
+      "icon": {
+        "code": "\uf1c9",
+        "color": "#be61d3"
+      },
+      "shape": "icon"
+    },
+    "directory": {
+      "icon": {
+        "code": "\uf07b"
+      },
+      "shape": "icon"
+    },
+    "file": {
+      "icon": {
+        "code": "\uf1c9"
+      },
+      "shape": "icon"
+    },
+    "useDefaultGroups": false
+  },
+  "height": "100%",
+  "interaction": {
+    "hoverConnectedEdges": true,
+    "keyboard": {
+      "enabled": true
+    },
+    "navigationButtons": true,
+    "selectConnectedEdges": true
+  },
+  "layout": {
+    "clusterThreshold": 150,
+    "hierarchical": {
+      "blockShifting": true,
+      "direction": "UD",
+      "edgeMinimization": true,
+      "enabled": false,
+      "levelSeparation": 150,
+      "nodeSpacing": 100,
+      "parentCentralization": true,
+      "sortMethod": "hubsize",
+      "treeSpacing": 200
+    },
+    "improvedLayout": true
+  },
+  "locale": "en",
+  "locales": {},
+  "manipulation": {
+    "addEdge": true,
+    "addNode": true,
+    "controlNodeStyle": {
+      "borderWidth": 2,
+      "borderWidthSelected": 2,
+      "color": {
+        "background": "#ff0000",
+        "border": "#3c3c3c",
+        "highlight": {
+          "background": "#07f968",
+          "border": "#3c3c3c"
+        }
+      },
+      "shape": "dot",
+      "size": 6
+    },
+    "deleteEdge": true,
+    "deleteNode": true,
+    "editEdge": true,
+    "enabled": false,
+    "initiallyActive": true
+  },
+  "nodes": {
+    "font": {
+      "color": "#ffffff",
+      "face": "JetBrains Mono",
+      "size": 20,
+      "strokeColor": "#404040",
+      "strokeWidth": 3
+    },
+    "shadow": {
+      "color": "#454545",
+      "size": 3,
+      "x": 1,
+      "y": 1
+    }
+  },
+  "physics": {
+    "barnesHut": {
+      "avoidOverlap": 0.5,
+      "centralGravity": 0.1,
+      "damping": 0.05,
+      "gravitationalConstant": -15000
+    },
+    "maxVelocity": 50,
+    "solver": "barnesHut"
+  },
+  "width": "100%"
+}
+const network = new vis.Network(document.getElementById('pygraph'), data, options);
       
-      const network = new vis.Network(
-    document.getElementById('pygraph'),
-    {
-        nodes: new vis.DataSet([{"fixed": true, "group": "directory", "icon": {"code": "\uf07b", "color": "gold", "size": 100}, "id": ".", "label": "arcpie", "level": 0, "link": "https://github.com/hwelch-fle/arcpie", "title": "arcpie", "x": 0, "y": 0}, {"group": "file", "id": ".gitignore", "label": ".gitignore", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/.gitignore", "title": ".gitignore"}, {"group": "file", "id": ".python-version", "label": ".python-version", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/.python-version", "title": ".python-version"}, {"group": "file", "id": "LICENSE", "label": "LICENSE", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/LICENSE", "title": "LICENSE"}, {"group": ".yml", "id": "mkdocs.yml", "label": "mkdocs.yml", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/mkdocs.yml", "title": "mkdocs.yml"}, {"group": ".toml", "id": "pyproject.toml", "label": "pyproject.toml", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/pyproject.toml", "title": "pyproject.toml"}, {"group": ".md", "id": "README.md", "label": "README.md", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/README.md", "title": "README.md"}, {"group": ".lock", "id": "uv.lock", "label": "uv.lock", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/uv.lock", "title": "uv.lock"}, {"group": "directory", "id": ".github", "label": ".github", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/.github", "title": ".github"}, {"group": "directory", "id": ".github/workflows", "label": "workflows", "level": 2, "link": "https://github.com/hwelch-fle/arcpie/tree/master/.github/workflows", "title": ".github/workflows"}, {"group": ".yml", "id": ".github/workflows/docs.yml", "label": "docs.yml", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/.github/workflows/docs.yml", "title": ".github/workflows/docs.yml"}, {"group": "directory", "id": "docs", "label": "docs", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs", "title": "docs"}, {"group": ".md", "id": "docs/index.md", "label": "index.md", "level": 2, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/index.md", "title": "docs/index.md"}, {"group": "directory", "id": "docs/examples", "label": "examples", "level": 2, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/examples", "title": "docs/examples"}, {"group": ".md", "id": "docs/examples/1_getting-started.md", "label": "1_getting-started.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/examples/1_getting-started.md", "title": "docs/examples/1_getting-started.md"}, {"group": ".md", "id": "docs/examples/2_feature-interaction.md", "label": "2_feature-interaction.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/examples/2_feature-interaction.md", "title": "docs/examples/2_feature-interaction.md"}, {"group": "directory", "id": "docs/modules", "label": "modules", "level": 2, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules", "title": "docs/modules"}, {"group": ".md", "id": "docs/modules/cursor.md", "label": "cursor.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/cursor.md", "title": "docs/modules/cursor.md"}, {"group": ".md", "id": "docs/modules/database.md", "label": "database.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/database.md", "title": "docs/modules/database.md"}, {"group": ".md", "id": "docs/modules/diff.md", "label": "diff.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/diff.md", "title": "docs/modules/diff.md"}, {"group": ".md", "id": "docs/modules/featureclass.md", "label": "featureclass.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/featureclass.md", "title": "docs/modules/featureclass.md"}, {"group": ".md", "id": "docs/modules/network.md", "label": "network.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/network.md", "title": "docs/modules/network.md"}, {"group": ".md", "id": "docs/modules/project.md", "label": "project.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/project.md", "title": "docs/modules/project.md"}, {"group": ".md", "id": "docs/modules/toolbox.md", "label": "toolbox.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/toolbox.md", "title": "docs/modules/toolbox.md"}, {"group": ".md", "id": "docs/modules/utils.md", "label": "utils.md", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/utils.md", "title": "docs/modules/utils.md"}, {"group": "directory", "id": "docs/modules/schema", "label": "schema", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/schema", "title": "docs/modules/schema"}, {"group": ".md", "id": "docs/modules/schema/domain.md", "label": "domain.md", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/schema/domain.md", "title": "docs/modules/schema/domain.md"}, {"group": ".md", "id": "docs/modules/schema/field.md", "label": "field.md", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/schema/field.md", "title": "docs/modules/schema/field.md"}, {"group": ".md", "id": "docs/modules/schema/layer.md", "label": "layer.md", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/schema/layer.md", "title": "docs/modules/schema/layer.md"}, {"group": ".md", "id": "docs/modules/schema/workspace.md", "label": "workspace.md", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/docs/modules/schema/workspace.md", "title": "docs/modules/schema/workspace.md"}, {"group": "directory", "id": "src", "label": "src", "level": 1, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src", "title": "src"}, {"group": "directory", "id": "src/arcpie", "label": "arcpie", "level": 2, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie", "title": "src/arcpie"}, {"group": ".py", "id": "src/arcpie/cursor.py", "label": "cursor.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/cursor.py", "title": "src/arcpie/cursor.py"}, {"group": ".py", "id": "src/arcpie/database.py", "label": "database.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/database.py", "title": "src/arcpie/database.py"}, {"group": ".py", "id": "src/arcpie/diff.py", "label": "diff.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/diff.py", "title": "src/arcpie/diff.py"}, {"group": ".py", "id": "src/arcpie/featureclass.py", "label": "featureclass.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/featureclass.py", "title": "src/arcpie/featureclass.py"}, {"group": ".py", "id": "src/arcpie/gdb_loader.py", "label": "gdb_loader.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/gdb_loader.py", "title": "src/arcpie/gdb_loader.py"}, {"group": ".py", "id": "src/arcpie/network.py", "label": "network.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/network.py", "title": "src/arcpie/network.py"}, {"group": ".py", "id": "src/arcpie/project.py", "label": "project.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/project.py", "title": "src/arcpie/project.py"}, {"group": ".typed", "id": "src/arcpie/py.typed", "label": "py.typed", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/py.typed", "title": "src/arcpie/py.typed"}, {"group": ".py", "id": "src/arcpie/toolbox.py", "label": "toolbox.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/toolbox.py", "title": "src/arcpie/toolbox.py"}, {"group": ".py", "id": "src/arcpie/utils.py", "label": "utils.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/utils.py", "title": "src/arcpie/utils.py"}, {"group": ".py", "id": "src/arcpie/_types.py", "label": "_types.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/_types.py", "title": "src/arcpie/_types.py"}, {"group": ".py", "id": "src/arcpie/__init__.py", "label": "__init__.py", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/__init__.py", "title": "src/arcpie/__init__.py"}, {"group": "directory", "id": "src/arcpie/schema", "label": "schema", "level": 3, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/schema", "title": "src/arcpie/schema"}, {"group": ".py", "id": "src/arcpie/schema/domain.py", "label": "domain.py", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/schema/domain.py", "title": "src/arcpie/schema/domain.py"}, {"group": ".py", "id": "src/arcpie/schema/field.py", "label": "field.py", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/schema/field.py", "title": "src/arcpie/schema/field.py"}, {"group": ".py", "id": "src/arcpie/schema/layer.py", "label": "layer.py", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/schema/layer.py", "title": "src/arcpie/schema/layer.py"}, {"group": ".py", "id": "src/arcpie/schema/workspace.py", "label": "workspace.py", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/schema/workspace.py", "title": "src/arcpie/schema/workspace.py"}, {"group": ".py", "id": "src/arcpie/schema/__init__.py", "label": "__init__.py", "level": 4, "link": "https://github.com/hwelch-fle/arcpie/tree/master/src/arcpie/schema/__init__.py", "title": "src/arcpie/schema/__init__.py"}]), 
-        edges: new vis.DataSet([{"from": ".", "to": ".gitignore"}, {"from": ".", "to": ".python-version"}, {"from": ".", "to": "LICENSE"}, {"from": ".", "to": "mkdocs.yml"}, {"from": ".", "to": "pyproject.toml"}, {"from": ".", "to": "README.md"}, {"from": ".", "to": "uv.lock"}, {"from": ".", "to": ".github"}, {"from": ".github", "to": ".github/workflows"}, {"from": ".github/workflows", "to": ".github/workflows/docs.yml"}, {"from": ".", "to": "docs"}, {"from": "docs", "to": "docs/index.md"}, {"from": "docs", "to": "docs/examples"}, {"from": "docs/examples", "to": "docs/examples/1_getting-started.md"}, {"from": "docs/examples", "to": "docs/examples/2_feature-interaction.md"}, {"from": "docs", "to": "docs/modules"}, {"from": "docs/modules", "to": "docs/modules/cursor.md"}, {"from": "docs/modules", "to": "docs/modules/database.md"}, {"from": "docs/modules", "to": "docs/modules/diff.md"}, {"from": "docs/modules", "to": "docs/modules/featureclass.md"}, {"from": "docs/modules", "to": "docs/modules/network.md"}, {"from": "docs/modules", "to": "docs/modules/project.md"}, {"from": "docs/modules", "to": "docs/modules/toolbox.md"}, {"from": "docs/modules", "to": "docs/modules/utils.md"}, {"from": "docs/modules", "to": "docs/modules/schema"}, {"from": "docs/modules/schema", "to": "docs/modules/schema/domain.md"}, {"from": "docs/modules/schema", "to": "docs/modules/schema/field.md"}, {"from": "docs/modules/schema", "to": "docs/modules/schema/layer.md"}, {"from": "docs/modules/schema", "to": "docs/modules/schema/workspace.md"}, {"from": ".", "to": "src"}, {"from": "src", "to": "src/arcpie"}, {"from": "src/arcpie", "to": "src/arcpie/cursor.py"}, {"from": "src/arcpie", "to": "src/arcpie/database.py"}, {"from": "src/arcpie", "to": "src/arcpie/diff.py"}, {"from": "src/arcpie", "to": "src/arcpie/featureclass.py"}, {"from": "src/arcpie", "to": "src/arcpie/gdb_loader.py"}, {"from": "src/arcpie", "to": "src/arcpie/network.py"}, {"from": "src/arcpie", "to": "src/arcpie/project.py"}, {"from": "src/arcpie", "to": "src/arcpie/py.typed"}, {"from": "src/arcpie", "to": "src/arcpie/toolbox.py"}, {"from": "src/arcpie", "to": "src/arcpie/utils.py"}, {"from": "src/arcpie", "to": "src/arcpie/_types.py"}, {"from": "src/arcpie", "to": "src/arcpie/__init__.py"}, {"from": "src/arcpie", "to": "src/arcpie/schema"}, {"from": "src/arcpie/schema", "to": "src/arcpie/schema/domain.py"}, {"from": "src/arcpie/schema", "to": "src/arcpie/schema/field.py"}, {"from": "src/arcpie/schema", "to": "src/arcpie/schema/layer.py"}, {"from": "src/arcpie/schema", "to": "src/arcpie/schema/workspace.py"}, {"from": "src/arcpie/schema", "to": "src/arcpie/schema/__init__.py"}]),
-    }, 
-    {"autoResize": true, "clickToUse": false, "configure": {"filter": false}, "edges": {"arrowStrikethrough": true, "arrows": "to", "color": {"hover": "gold", "inherit": "to"}, "endPointOffset": {"to": -5}, "hoverWidth": 5, "length": 50, "width": 3}, "groups": {".lock": {"icon": {"code": "\uf023", "color": "red"}, "shape": "icon"}, ".md": {"icon": {"code": "\uf60f", "color": "black"}, "shape": "icon"}, ".py": {"icon": {"code": "\uf3e2", "color": "#ffc42d"}, "shape": "icon"}, ".toml": {"icon": {"code": "\uf1c9", "color": "#86431a"}, "shape": "icon"}, ".typed": {"icon": {"code": "\uf1c9", "color": "#3aa5e4"}, "shape": "icon"}, ".yml": {"icon": {"code": "\uf1c9", "color": "#be61d3"}, "shape": "icon"}, "directory": {"icon": {"code": "\uf07b"}, "shape": "icon"}, "file": {"icon": {"code": "\uf1c9"}, "shape": "icon"}, "useDefaultGroups": false}, "height": "100%", "interaction": {"hoverConnectedEdges": true, "keyboard": {"enabled": true}, "navigationButtons": true, "selectConnectedEdges": true}, "layout": {"clusterThreshold": 150, "hierarchical": {"blockShifting": true, "direction": "UD", "edgeMinimization": true, "enabled": false, "levelSeparation": 150, "nodeSpacing": 100, "parentCentralization": true, "sortMethod": "hubsize", "treeSpacing": 200}, "improvedLayout": true}, "locale": "en", "locales": {}, "manipulation": {"addEdge": true, "addNode": true, "controlNodeStyle": {"borderWidth": 2, "borderWidthSelected": 2, "color": {"background": "#ff0000", "border": "#3c3c3c", "highlight": {"background": "#07f968", "border": "#3c3c3c"}}, "shape": "dot", "size": 6}, "deleteEdge": true, "deleteNode": true, "editEdge": true, "enabled": false, "initiallyActive": true}, "nodes": {"font": {"color": "#ffffff", "face": "JetBrains Mono", "size": 20, "strokeColor": "#404040", "strokeWidth": 3}, "shadow": {"color": "#454545", "size": 3, "x": 1, "y": 1}}, "physics": {"barnesHut": {"avoidOverlap": 0.5, "centralGravity": 0.1, "damping": 0.05, "gravitationalConstant": -15000}, "maxVelocity": 50, "solver": "barnesHut"}, "width": "100%"}
-);
+      network.on('hoverEdge', (event) => { updateEdges(getEdges([event.edge]).map(showLabel)) });
+network.on('blurEdge', (event) => { updateEdges(getEdges([event.edge]).map(hideLabel)) });
+network.on('hoverNode', (event) => { updateEdges(edgesAtNode(event.node).map(showLabel)) });
+network.on('blurNode', (event) => { updateEdges(edgesAtNode(event.node).map(hideLabel)) });
+      
+      
+      // Progress Bar
+const progressContainer = document.getElementById('progressContainer')
+const progressBar = document.getElementById('progressBar')
+
+let setProgressBar = (visibility, percent) => {
+    progressContainer.style.visibility = visibility
+    progressBar.style.width = `${percent}%`
+};
+let hideProgressBar = () => setProgressBar('hidden', 0);
+let showProgressBar = (percent) => setProgressBar('visible', percent);
+
+network.on('stabilizationProgress', (event) => {showProgressBar((event.iterations / event.total) * 100)});
+network.on('stabilizationIterationsDone', hideProgressBar);
+network.on('stabilized', hideProgressBar);
+      
+      
+      
 
 
-network.on('doubleClick', function (event) {
-    const node = network.body.data.nodes.get(event.nodes[0]);
-    if (node) { window.open(node.link) };
+
+
+
+let changeNodes = (selection) => {
+    if (selection.length == 0) { resetNetwork(); return; }
+    
+    var { nodes, edges } = getBaseData()
+    edges = edges.get({
+        filter: (edge) =>
+        selection.includes(edge.to) || selection.includes(edge.from),
+    })
+    const nodeIds = [
+        ...new Set(edges.map((edge) => [edge.to, edge.from]).flat()),
+    ]
+    nodes = nodes.get(nodeIds)
+    setNetwork(nodes, edges)
+};
+
+
+
+
+const collator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
 });
 
 
+const tomSelectNodes = new TomSelect("#tom-select-nodes", {
+  maxItems: null,
+  maxOptions: 100,
+  valueField: "id",
+  labelField: "id",
+  searchField: "id",
+  sortField: "label",
+  options: allNodes()
+    
+    .get(),
+    
+  create: false,
+  onChange: changeNodes,
+  
+  onClear: resetNetwork,
+  
+  plugins: ['remove_button', 'clear_button'],
+});
+
+
+
+
+// Selection Transformers
+let addItem = (selector, item) => item ? selector.addItem(item, false) || true : false
+let addNodeSelection = (item) => addItem(tomSelectNodes, item?.id)
+let addEdgeSelection = (item) =>  undefined 
+let updateSelection = (event) => addNodeSelection(getNodes(event.nodes[0])) || addEdgeSelection(getEdges(event.edges[0]))
+let clearFilters = () => {
+  
+  tomSelectNodes.clear(false);
+}
       
+      
+      network.on("doubleClick", (event) => {
+  openLink(resolveLink(event))
+  
+  || clearFilters();
+  
+});
+
+var clickStack = [];
+network.on("click", async (event) => {
+  const clickedAt = new Date().valueOf();
+  clickStack.push(clickedAt);
+  await new Promise((r) => setTimeout(r, 200));
+  if (clickStack.pop() == clickedAt) {
+    
+    updateSelection(event);
+    
+  }
+});
     </script>
   </body>
 </html>

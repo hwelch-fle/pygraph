@@ -1,62 +1,394 @@
+
 <html>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>geo-grab</title>
-    <link
-      href="https://fonts.googleapis.com/css?family=JetBrains Mono"
-      rel="stylesheet"
-    />
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pygraph</title>
+    
+<!-- JetBrains Mono -->
+<link rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=JetBrains Mono"
+/>
 
-    <!-- FontAwesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
-      integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
 
-    <!-- Visjs-min -->
-    <script
-      type="text/javascript"
-      src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"
-    ></script>
-    <style type="text/css">
-      body {
-        font-family: "JetBrains Mono";font-size: 12px;
-      }
-      #pygraph {
-          width: 100%;
-          height: 100%;
-          border: 1px solid lightgray;
-          background-color:#1f1f1f;
-      }
-    </style>
+
+<!-- FontAwesome -->
+<link rel="stylesheet" crossorigin="anonymous" referrerpolicy="no-referrer"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+/>
+
+
+<!-- Visjs-min -->
+<script type="text/javascript"
+    src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"
+></script>
+
+
+<!-- Tom Select -->
+<link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" 
+/>
+<script 
+    src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js">
+</script>
+
+    
+
+
+
+<style type="text/css">
+    body{
+        font-family: "JetBrains Mono";
+        font-size: 12px;
+    }
+
+    #pygraph {
+        width: 100%;
+        height: 100%;
+        background-color:darkslategrey;
+    }
+    
+    .left {
+        z-index: 1;
+        position: fixed;
+        width: 45%;
+        left: 0;
+        padding: 20px;
+    }
+
+    .right {
+        z-index: 1;
+        position: fixed;
+        width: 45%;
+        right: 0;
+        padding: 20px;
+    }
+    
+
+    
+    
+    #progressContainer {
+        height: 20px;
+        width: 50%;
+        right: 25%;
+        bottom: 5%;
+        background-color: #ffffff5b;
+        border-radius: 5.5px;
+        overflow: hidden;
+        position: absolute;
+        visibility: hidden;
+        
+        z-index: 1;
+    }
+
+    #progressBar {
+        width: 0%;
+        height: 20px;
+        background-color: #4caf50ff;
+        z-index: 2;
+    }
+    
+</style>
   </head>
   <body>
     
+    
+
+<div>
+
+<div class="right">
+    <div class="d-inline-block">
+    <select id="tom-select-nodes" multiple autocomplete="on" placeholder="Search Files"></select>
+    </div>
+</div>
+
+
+</div>
+    
+    
+    <div id="progressContainer">
+    <div id="progressBar"></div>
+</div>
+    
     <div id="pygraph"></div>
-
+    
     <script type="text/javascript">
+      // Node Transformers
+let allNodes = () => network.body.data.nodes
+let getNodes = (nodeIds) => allNodes().get(nodeIds)
+let updateNodes = (nodeArray) => allNodes().updateOnly(nodeArray)
+
+// Edge Transformers
+let allEdges = () => network.body.data.edges
+let getEdges = (edgeIds) => allEdges().get(edgeIds)
+let edgesAtNode = (nodeId) => allEdges().get(network.getConnectedEdges(nodeId))
+let nodesAtEdge = (edge) => [edge.to, edge.from]
+let updateEdges = (edgeArray) => allEdges().updateOnly(edgeArray)
+
+// Network Transformers
+let setNetwork = (nodes, edges) => network.setData({ nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) })
+let getBaseData = () => ({ nodes: data.nodes, edges: data.edges })
+let resetNetwork = () => setNetwork(data.nodes.get(), data.edges.get())
+
+
+
+let openLink = (item) => (item?.link) && window.open(item?.link) || false
+let resolveLink = (event) => getNodes(event.nodes[0]) || getEdges(event.edges[0]) || undefined
+      const data = {
+    nodes:  new vis.DataSet([{"fixed": true, "group": "directory", "icon": {"code": "\uf07b", "color": "gold", "size": 100}, "id": ".", "label": "geo-grab", "level": 0, "link": "https://github.com/hwelch-fle/geo-grab", "title": "geo-grab", "x": -10, "y": -4}, {"group": "file", "id": ".gitignore", "label": ".gitignore", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/.gitignore", "title": ".gitignore", "x": 1000, "y": 211}, {"group": "file", "id": ".python-version", "label": ".python-version", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/.python-version", "title": ".python-version", "x": -632, "y": -781}, {"group": ".py", "id": "geo_grab.py", "label": "geo_grab.py", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/geo_grab.py", "title": "geo_grab.py", "x": 819, "y": -550}, {"group": "file", "id": "LICENSE", "label": "LICENSE", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/LICENSE", "title": "LICENSE", "x": 490, "y": 793}, {"group": ".toml", "id": "pyproject.toml", "label": "pyproject.toml", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/pyproject.toml", "title": "pyproject.toml", "x": -170, "y": 921}, {"group": ".md", "id": "README.md", "label": "README.md", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/README.md", "title": "README.md", "x": -894, "y": -165}, {"group": ".png", "id": "usage.png", "label": "usage.png", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/usage.png", "title": "usage.png", "x": 193, "y": -968}, {"group": ".lock", "id": "uv.lock", "label": "uv.lock", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/uv.lock", "title": "uv.lock", "x": -794, "y": 544}]),
+    edges: new vis.DataSet([{"from": ".", "to": ".gitignore"}, {"from": ".", "to": ".python-version"}, {"from": ".", "to": "geo_grab.py"}, {"from": ".", "to": "LICENSE"}, {"from": ".", "to": "pyproject.toml"}, {"from": ".", "to": "README.md"}, {"from": ".", "to": "usage.png"}, {"from": ".", "to": "uv.lock"}]),
+}
+const options = {
+  "autoResize": true,
+  "clickToUse": false,
+  "configure": {
+    "filter": false
+  },
+  "edges": {
+    "arrowStrikethrough": true,
+    "arrows": "to",
+    "color": {
+      "hover": "gold",
+      "inherit": "to"
+    },
+    "endPointOffset": {
+      "to": -5
+    },
+    "hoverWidth": 5,
+    "length": 50,
+    "width": 3
+  },
+  "groups": {
+    ".lock": {
+      "icon": {
+        "code": "\uf023",
+        "color": "red"
+      },
+      "shape": "icon"
+    },
+    ".md": {
+      "icon": {
+        "code": "\uf60f",
+        "color": "black"
+      },
+      "shape": "icon"
+    },
+    ".png": {
+      "icon": {
+        "code": "\uf03e",
+        "color": "#6446d8"
+      },
+      "shape": "icon"
+    },
+    ".py": {
+      "icon": {
+        "code": "\uf3e2",
+        "color": "#ffc42d"
+      },
+      "shape": "icon"
+    },
+    ".toml": {
+      "icon": {
+        "code": "\uf1c9",
+        "color": "#86431a"
+      },
+      "shape": "icon"
+    },
+    "directory": {
+      "icon": {
+        "code": "\uf07b"
+      },
+      "shape": "icon"
+    },
+    "file": {
+      "icon": {
+        "code": "\uf1c9"
+      },
+      "shape": "icon"
+    },
+    "useDefaultGroups": false
+  },
+  "height": "100%",
+  "interaction": {
+    "hoverConnectedEdges": true,
+    "keyboard": {
+      "enabled": true
+    },
+    "navigationButtons": true,
+    "selectConnectedEdges": true
+  },
+  "layout": {
+    "clusterThreshold": 150,
+    "hierarchical": {
+      "blockShifting": true,
+      "direction": "UD",
+      "edgeMinimization": true,
+      "enabled": false,
+      "levelSeparation": 150,
+      "nodeSpacing": 100,
+      "parentCentralization": true,
+      "sortMethod": "hubsize",
+      "treeSpacing": 200
+    },
+    "improvedLayout": true
+  },
+  "locale": "en",
+  "locales": {},
+  "manipulation": {
+    "addEdge": true,
+    "addNode": true,
+    "controlNodeStyle": {
+      "borderWidth": 2,
+      "borderWidthSelected": 2,
+      "color": {
+        "background": "#ff0000",
+        "border": "#3c3c3c",
+        "highlight": {
+          "background": "#07f968",
+          "border": "#3c3c3c"
+        }
+      },
+      "shape": "dot",
+      "size": 6
+    },
+    "deleteEdge": true,
+    "deleteNode": true,
+    "editEdge": true,
+    "enabled": false,
+    "initiallyActive": true
+  },
+  "nodes": {
+    "font": {
+      "color": "#ffffff",
+      "face": "JetBrains Mono",
+      "size": 20,
+      "strokeColor": "#404040",
+      "strokeWidth": 3
+    },
+    "shadow": {
+      "color": "#454545",
+      "size": 3,
+      "x": 1,
+      "y": 1
+    }
+  },
+  "physics": {
+    "barnesHut": {
+      "avoidOverlap": 0.5,
+      "centralGravity": 0.1,
+      "damping": 0.05,
+      "gravitationalConstant": -15000
+    },
+    "maxVelocity": 50,
+    "solver": "barnesHut"
+  },
+  "width": "100%"
+}
+const network = new vis.Network(document.getElementById('pygraph'), data, options);
       
-      const network = new vis.Network(
-    document.getElementById('pygraph'),
-    {
-        nodes: new vis.DataSet([{"fixed": true, "group": "directory", "icon": {"code": "\uf07b", "color": "gold", "size": 100}, "id": ".", "label": "geo-grab", "level": 0, "link": "https://github.com/hwelch-fle/geo-grab", "title": "geo-grab", "x": 0, "y": 0}, {"group": "file", "id": ".gitignore", "label": ".gitignore", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/.gitignore", "title": ".gitignore"}, {"group": "file", "id": ".python-version", "label": ".python-version", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/.python-version", "title": ".python-version"}, {"group": ".py", "id": "geo_grab.py", "label": "geo_grab.py", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/geo_grab.py", "title": "geo_grab.py"}, {"group": "file", "id": "LICENSE", "label": "LICENSE", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/LICENSE", "title": "LICENSE"}, {"group": ".toml", "id": "pyproject.toml", "label": "pyproject.toml", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/pyproject.toml", "title": "pyproject.toml"}, {"group": ".md", "id": "README.md", "label": "README.md", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/README.md", "title": "README.md"}, {"group": ".png", "id": "usage.png", "label": "usage.png", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/usage.png", "title": "usage.png"}, {"group": ".lock", "id": "uv.lock", "label": "uv.lock", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/uv.lock", "title": "uv.lock"}]), 
-        edges: new vis.DataSet([{"from": ".", "to": ".gitignore"}, {"from": ".", "to": ".python-version"}, {"from": ".", "to": "geo_grab.py"}, {"from": ".", "to": "LICENSE"}, {"from": ".", "to": "pyproject.toml"}, {"from": ".", "to": "README.md"}, {"from": ".", "to": "usage.png"}, {"from": ".", "to": "uv.lock"}]),
-    }, 
-    {"autoResize": true, "clickToUse": false, "configure": {"filter": false}, "edges": {"arrowStrikethrough": true, "arrows": "to", "color": {"hover": "gold", "inherit": "to"}, "endPointOffset": {"to": -5}, "hoverWidth": 5, "length": 50, "width": 3}, "groups": {".lock": {"icon": {"code": "\uf023", "color": "red"}, "shape": "icon"}, ".md": {"icon": {"code": "\uf60f", "color": "black"}, "shape": "icon"}, ".png": {"icon": {"code": "\uf03e", "color": "#6446d8"}, "shape": "icon"}, ".py": {"icon": {"code": "\uf3e2", "color": "#ffc42d"}, "shape": "icon"}, ".toml": {"icon": {"code": "\uf1c9", "color": "#86431a"}, "shape": "icon"}, "directory": {"icon": {"code": "\uf07b"}, "shape": "icon"}, "file": {"icon": {"code": "\uf1c9"}, "shape": "icon"}, "useDefaultGroups": false}, "height": "100%", "interaction": {"hoverConnectedEdges": true, "keyboard": {"enabled": true}, "navigationButtons": true, "selectConnectedEdges": true}, "layout": {"clusterThreshold": 150, "hierarchical": {"blockShifting": true, "direction": "UD", "edgeMinimization": true, "enabled": false, "levelSeparation": 150, "nodeSpacing": 100, "parentCentralization": true, "sortMethod": "hubsize", "treeSpacing": 200}, "improvedLayout": true}, "locale": "en", "locales": {}, "manipulation": {"addEdge": true, "addNode": true, "controlNodeStyle": {"borderWidth": 2, "borderWidthSelected": 2, "color": {"background": "#ff0000", "border": "#3c3c3c", "highlight": {"background": "#07f968", "border": "#3c3c3c"}}, "shape": "dot", "size": 6}, "deleteEdge": true, "deleteNode": true, "editEdge": true, "enabled": false, "initiallyActive": true}, "nodes": {"font": {"color": "#ffffff", "face": "JetBrains Mono", "size": 20, "strokeColor": "#404040", "strokeWidth": 3}, "shadow": {"color": "#454545", "size": 3, "x": 1, "y": 1}}, "physics": {"barnesHut": {"avoidOverlap": 0.5, "centralGravity": 0.1, "damping": 0.05, "gravitationalConstant": -15000}, "maxVelocity": 50, "solver": "barnesHut"}, "width": "100%"}
-);
+      network.on('hoverEdge', (event) => { updateEdges(getEdges([event.edge]).map(showLabel)) });
+network.on('blurEdge', (event) => { updateEdges(getEdges([event.edge]).map(hideLabel)) });
+network.on('hoverNode', (event) => { updateEdges(edgesAtNode(event.node).map(showLabel)) });
+network.on('blurNode', (event) => { updateEdges(edgesAtNode(event.node).map(hideLabel)) });
+      
+      
+      // Progress Bar
+const progressContainer = document.getElementById('progressContainer')
+const progressBar = document.getElementById('progressBar')
+
+let setProgressBar = (visibility, percent) => {
+    progressContainer.style.visibility = visibility
+    progressBar.style.width = `${percent}%`
+};
+let hideProgressBar = () => setProgressBar('hidden', 0);
+let showProgressBar = (percent) => setProgressBar('visible', percent);
+
+network.on('stabilizationProgress', (event) => {showProgressBar((event.iterations / event.total) * 100)});
+network.on('stabilizationIterationsDone', hideProgressBar);
+network.on('stabilized', hideProgressBar);
+      
+      
+      
 
 
-network.on('doubleClick', function (event) {
-    const node = network.body.data.nodes.get(event.nodes[0]);
-    if (node) { window.open(node.link) };
+
+
+
+let changeNodes = (selection) => {
+    if (selection.length == 0) { resetNetwork(); return; }
+    
+    var { nodes, edges } = getBaseData()
+    edges = edges.get({
+        filter: (edge) =>
+        selection.includes(edge.to) || selection.includes(edge.from),
+    })
+    const nodeIds = [
+        ...new Set(edges.map((edge) => [edge.to, edge.from]).flat()),
+    ]
+    nodes = nodes.get(nodeIds)
+    setNetwork(nodes, edges)
+};
+
+
+
+
+const collator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
 });
 
 
+const tomSelectNodes = new TomSelect("#tom-select-nodes", {
+  maxItems: null,
+  maxOptions: 100,
+  valueField: "id",
+  labelField: "id",
+  searchField: "id",
+  sortField: "label",
+  options: allNodes()
+    
+    .get(),
+    
+  create: false,
+  onChange: changeNodes,
+  
+  onClear: resetNetwork,
+  
+  plugins: ['remove_button', 'clear_button'],
+});
+
+
+
+
+// Selection Transformers
+let addItem = (selector, item) => item ? selector.addItem(item, false) || true : false
+let addNodeSelection = (item) => addItem(tomSelectNodes, item?.id)
+let addEdgeSelection = (item) =>  undefined 
+let updateSelection = (event) => addNodeSelection(getNodes(event.nodes[0])) || addEdgeSelection(getEdges(event.edges[0]))
+let clearFilters = () => {
+  
+  tomSelectNodes.clear(false);
+}
       
+      
+      network.on("doubleClick", (event) => {
+  openLink(resolveLink(event))
+  
+  || clearFilters();
+  
+});
+
+var clickStack = [];
+network.on("click", async (event) => {
+  const clickedAt = new Date().valueOf();
+  clickStack.push(clickedAt);
+  await new Promise((r) => setTimeout(r, 200));
+  if (clickStack.pop() == clickedAt) {
+    
+    updateSelection(event);
+    
+  }
+});
     </script>
   </body>
 </html>
