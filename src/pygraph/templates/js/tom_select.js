@@ -82,7 +82,7 @@ const tomSelectNodes = new TomSelect("#tom-select-nodes", {
   {% if node.reset_on_clear|default("true") %}
   onClear: resetNetwork,
   {% endif %}
-  plugins: {{node.plugins|default(["remove_button", "clear_button"])}},
+  plugins: {{node.plugins|default(["remove_button", "clear_button", "input_autogrow"])}},
 });
 {% endif %}
 
@@ -107,7 +107,7 @@ const tomSelectEdges = new TomSelect("#tom-select-edges", {
   {% if edge.reset_on_clear|default("true") %}
   onClear: resetNetwork,
   {% endif %}
-  plugins: {{edge.plugins|default(["remove_button", "clear_button"])}},
+  plugins: {{edge.plugins|default(["remove_button", "clear_button", "input_autogrow"])}},
 });
 {% endif %}
 
