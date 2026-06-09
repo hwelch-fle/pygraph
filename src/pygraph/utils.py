@@ -1,10 +1,7 @@
 import itertools
 from collections.abc import Iterable
 from copy import deepcopy
-from typing import (
-    Any,
-    Unpack,
-)
+from typing import Unpack
 
 import jinja2
 import rustworkx as rx
@@ -14,6 +11,9 @@ from pygraph.pygraph import (
     Network,
     Node,
     NodeId,
+)
+from pygraph.templates import (
+    BaseTemplateOptions,
 )
 from pygraph.vis import (
     EdgeOptions,
@@ -115,7 +115,7 @@ def kevin_bacon(nx: Network, node: Node | NodeId, *, copy: bool = False) -> Netw
     return get_neighborhood(nx, node, 7, copy=copy)
 
 
-def to_html(nx: Network, template: jinja2.Template, **kwargs: Any) -> str:
+def to_html(nx: Network, template: jinja2.Template, **kwargs: Unpack[BaseTemplateOptions]) -> str:
     """Export the network to an HTML template
 
     The supplied template *MUST* accept `nodes`, `edges`, and `options` values that
@@ -131,6 +131,10 @@ def to_html(nx: Network, template: jinja2.Template, **kwargs: Any) -> str:
     Returns:
         A string value with the HTML required to render the network
     """
-    nx_data = {'data': nx.to_dict()}
-    kwargs.update(nx_data)
+    nx_data = nx.to_dict()
+    kwargs.setdefault('network', {})
+    assert 'network' in kwargs
+    kwargs['network']['nodes'] = nx_data['nodes']
+    kwargs['network']['edges'] = nx_data['edges']
+    kwargs['network']['options'] = nx_data['options']
     return template.render(**kwargs)

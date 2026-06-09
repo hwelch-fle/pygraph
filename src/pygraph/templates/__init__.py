@@ -1,1 +1,1 @@
-from .models import BaseTemplate as BaseTemplate
+from .models import BaseTemplateOptions as BaseTemplateOptions
