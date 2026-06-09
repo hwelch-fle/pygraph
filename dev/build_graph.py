@@ -4,12 +4,14 @@ from pathlib import Path
 
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-from pygraph.builders import DirectoryBuilder
+from pygraph.builders import GitRepoBuilder
 from pygraph.builders.styles import GitRepoStyle
 from pygraph.pygraph import Network, Node
 from pygraph.utils import to_html
 
 ENV = Environment(loader=PackageLoader('pygraph'), autoescape=select_autoescape())
+
+BUILT: list[GitRepoBuilder] = []
 
 TARGETS = [
     # Qiskit
@@ -44,22 +46,23 @@ TARGETS = [
 ]
 
 
-def build_graph(url: str) -> DirectoryBuilder:
+def build_graph(url: str) -> GitRepoBuilder:
     template = ENV.get_template('html/base.html')
-    builder = DirectoryBuilder(
+    builder = GitRepoBuilder(
         url,
+        silent=True,
         style=GitRepoStyle,
         ignores={'patterns': ['.git/']},
         network_options={'nodes': {'font': {'face': 'JetBrains Mono'}}},
     )
-    nx = builder.web_network()
+    nx = builder.network()
     nx.spring_solve()
-    out = Path(f'docs/ref/repo-graphs/{builder.user}/{builder.repo}.html')
+    out = Path(f'docs/ref/repo-graphs/{builder.user}/{builder.name}.html')
     out.parent.mkdir(parents=True, exist_ok=True)
     html = to_html(
         nx,
         template,
-        network={'title': builder.repo},
+        network={'title': builder.name},
         progressor={'enabled': True},
         selectors={
             'node': {
@@ -78,7 +81,6 @@ def build_graph(url: str) -> DirectoryBuilder:
 
 def main():
     template = ENV.get_template('html/base.html')
-    built: list[DirectoryBuilder] = []
 
     with ThreadPoolExecutor(len(TARGETS), thread_name_prefix='pygraph-') as executor:
         futs = {executor.submit(build_graph, targ): targ for targ in TARGETS}
@@ -88,8 +90,8 @@ def main():
             except TimeoutError as e:
                 print(f'\n[FAILED]: {futs[future]} timed out ({e})')
                 continue
-            print(f'\nbuilt {builder.repo}')
-            built.append(builder)
+            print(f'built {builder.name}')
+            BUILT.append(builder)
 
     nx = Network(
         nodes={
@@ -102,8 +104,8 @@ def main():
         },
     )
     nx.barnes_hut(gravitationalConstant=-6000, avoidOverlap=0.75)
-    for builder in built:
-        repo = builder.repo
+    for builder in BUILT:
+        repo = builder.name
         user = str(builder.user)
         if f'user:{user}' not in nx:
             usr_clr = f'#{md5(user.encode('utf-8'), usedforsecurity=False).hexdigest()[:6]}'
@@ -131,7 +133,7 @@ def main():
         )
         nx.add_node(repo_node)
         nx.add_edge((f'user:{user}', f'repo:{repo}'))
-        builder.delete_directory()
+        builder.delete_temp_directory()
         print(f'cleaned up {repo}')
 
     nx.spring_solve()
@@ -149,9 +151,16 @@ def main():
             },
         },
     )
-    print('\nwriting index...')
+    print('writing index...')
     out.write_text(html)
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception:
+        print('[FAILED]: Cleaning...')
+        for builder in BUILT:
+            builder.delete_temp_directory()
+            print(f'Deleted {builder.name}')
+        raise

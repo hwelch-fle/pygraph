@@ -10,11 +10,14 @@ __all__ = 'DefaultGroupOptions', 'GroupOptions'
 
 
 if TYPE_CHECKING:
+
     class GroupOptions(TypedDict, extra_items=NodeOptions):
         useDefaultGroups: bool
 else:
+
     class GroupOptions(TypedDict):
         useDefaultGroups: bool
+
 
 DefaultGroupOptions: GroupOptions = {
     'useDefaultGroups': True,

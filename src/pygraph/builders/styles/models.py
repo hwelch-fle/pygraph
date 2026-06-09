@@ -1,3 +1,5 @@
+"""TypedDict models for all style submodules"""
+
 from pathlib import Path
 from typing import Literal, TypedDict
 

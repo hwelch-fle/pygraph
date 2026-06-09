@@ -1,3 +1,5 @@
+"""Style for a GitRepo graph"""
+
 from .models import DirectoryBuilderOpts
 
 GitRepoStyle: DirectoryBuilderOpts = {

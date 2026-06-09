@@ -41,8 +41,10 @@ __all__ = 'DefaultNetworkOptions', 'NetworkOptions'
 
 
 if TYPE_CHECKING:
+
     class Locales(TypedDict, extra_items=dict[str, str]): ...
 else:
+
     class Locales(TypedDict): ...
 
 

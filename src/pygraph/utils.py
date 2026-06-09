@@ -1,7 +1,7 @@
 import itertools
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping, MutableMapping
 from copy import deepcopy
-from typing import Unpack
+from typing import Any, TypeGuard, Unpack
 
 import jinja2
 import rustworkx as rx
@@ -138,3 +138,34 @@ def to_html(nx: Network, template: jinja2.Template, **kwargs: Unpack[BaseTemplat
     kwargs['network']['edges'] = nx_data['edges']
     kwargs['network']['options'] = nx_data['options']
     return template.render(**kwargs)
+
+
+def is_mapping(obj: Mapping[Any, Any] | MutableMapping[Any, Any] | Any) -> TypeGuard[Mapping[Any, Any] | MutableMapping[Any, Any]]:
+    return isinstance(obj, Mapping)
+
+
+def deprox[K, V](o: Mapping[K, V]) -> MutableMapping[K, V]:
+    """INTERNAL: Used to turn nested MappingProxyTypes into a dict"""
+    deproxed: dict[Any, Any] = {}
+    assert is_mapping(o)
+    for k, v in o.items():
+        if is_mapping(v):
+            deproxed[k] = deprox(v)
+        else:
+            deproxed[k] = deepcopy(v)
+    return deproxed
+
+
+# TODO: Test this heavily
+def deep_update(target: Mapping[Any, Any], updates: Mapping[Any, Any]) -> dict[Any, Any]:
+    updated = dict(deprox(target).items())
+    for k in target.keys() | updates.keys():
+        if k not in updates:
+            continue
+        if k not in target:
+            updated[k] = updates[k]
+        elif is_mapping(target[k]):
+            updated[k] = deep_update(updates[k], target[k])
+        else:
+            updated[k] = deepcopy(target[k])
+    return updated

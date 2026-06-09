@@ -194,9 +194,22 @@ class _NodeOptions(TypedDict, total=False):
     shadow: Shadow | bool
     shape: Literal[
         # Label inside
-        'ellipse', 'circle', 'database', 'box', 'text',
+        'ellipse',
+        'circle',
+        'database',
+        'box',
+        'text',
         # Label Outside
-        'image', 'circularImage', 'diamond', 'dot', 'star', 'triangle', 'triangleDown', 'hexagon', 'square', 'icon'
+        'image',
+        'circularImage',
+        'diamond',
+        'dot',
+        'star',
+        'triangle',
+        'triangleDown',
+        'hexagon',
+        'square',
+        'icon',
     ]
     shapeProperties: ShapeProperties
     size: int
@@ -210,9 +223,11 @@ class _NodeOptions(TypedDict, total=False):
 
 
 if TYPE_CHECKING:
+
     class NodeOptions(_NodeOptions, extra_items=Any): ...
 
 else:
+
     class NodeOptions(_NodeOptions): ...
 
 
