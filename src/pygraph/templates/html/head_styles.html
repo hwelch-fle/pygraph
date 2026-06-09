@@ -1,0 +1,77 @@
+{# Schema
+    network.style:
+        width: ... (default: '100%')
+        height: ... (default: '100%')
+        background: str (default: 'darkslategrey')
+        font_size: int (default: '12px')
+        font_family: str (default: 'JetBrains Mono')
+
+    progressor:
+        enabled: bool (default: True)
+        style (optional):
+            width: str | int (default: '50%')
+            right: str | int (default: '25%')
+            bottom: str | int (default: '5%')
+            background: str (default: '#ffffff5b')
+            color: str (default: '#4caf50ff')
+            radius: str | int (default: '5.5px')
+            blur: str | int | bool (default: '10px')
+#}
+{% set network = network.style or {}%}
+{% set progressor = progressor or {}%}
+
+<style type="text/css">
+    body{
+        font-family: "{{network.font_family|default('JetBrains Mono')}}";
+        font-size: {{network.font_size|default(12)}}px;
+    }
+
+    #pygraph {
+        width: {{network.width|default('100%')}};
+        height: {{network.height|default('100%')}};
+        background-color:{{network.background|default('darkslategrey')}};
+    }
+    {% if selectors %}
+    .left {
+        z-index: 1;
+        position: fixed;
+        width: 45%;
+        left: 0;
+        padding: 20px;
+    }
+
+    .right {
+        z-index: 1;
+        position: fixed;
+        width: 45%;
+        right: 0;
+        padding: 20px;
+    }
+    {% endif %}
+
+    {% if progressor.enabled|default(True) %}
+    {% set progressor = progressor.style or {} %}
+    #progressContainer {
+        height: {{progressor.height|default('20')|string}}px;
+        width: {{progressor.width|default('50%')|string}};
+        right: {{progressor.right|default('25%')|string}};
+        bottom: {{progressor.bottom|default('5%')|string}};
+        background-color: {{progressor.background|default('#ffffff5b')|string}};
+        border-radius: {{progressor.radius|default('5.5')|string}}px;
+        overflow: hidden;
+        position: absolute;
+        visibility: hidden;
+        {% if progressor.blur %}
+        backdrop-filter: blur({{10 if isinstance(progressor.blur, bool) else progressor.blur|string}}px);
+        {% endif %}
+        z-index: 1;
+    }
+
+    #progressBar {
+        width: 0%;
+        height: {{progressor.height|default('20')}}px;
+        background-color: {{progressor.color|default('#4caf50ff')}};
+        z-index: 2;
+    }
+    {% endif %}
+</style>
