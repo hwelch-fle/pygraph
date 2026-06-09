@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>pygraph</title>
+    <title>geo-grab</title>
     
 <!-- JetBrains Mono -->
 <link rel="stylesheet"
@@ -51,7 +51,7 @@
     .left {
         z-index: 1;
         position: fixed;
-        width: 45%;
+        
         left: 0;
         padding: 20px;
     }
@@ -59,7 +59,7 @@
     .right {
         z-index: 1;
         position: fixed;
-        width: 45%;
+        
         right: 0;
         padding: 20px;
     }
@@ -98,7 +98,7 @@
 
 <div class="right">
     <div class="d-inline-block">
-    <select id="tom-select-nodes" multiple autocomplete="on" placeholder="Search Files"></select>
+    <select id="tom-select-nodes" multiple autocomplete="on" placeholder="Search"></select>
     </div>
 </div>
 
@@ -135,7 +135,7 @@ let resetNetwork = () => setNetwork(data.nodes.get(), data.edges.get())
 let openLink = (item) => (item?.link) && window.open(item?.link) || false
 let resolveLink = (event) => getNodes(event.nodes[0]) || getEdges(event.edges[0]) || undefined
       const data = {
-    nodes:  new vis.DataSet([{"fixed": true, "group": "directory", "icon": {"code": "\uf07b", "color": "gold", "size": 100}, "id": ".", "label": "geo-grab", "level": 0, "link": "https://github.com/hwelch-fle/geo-grab", "title": "geo-grab", "x": -10, "y": -4}, {"group": "file", "id": ".gitignore", "label": ".gitignore", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/.gitignore", "title": ".gitignore", "x": 1000, "y": 211}, {"group": "file", "id": ".python-version", "label": ".python-version", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/.python-version", "title": ".python-version", "x": -632, "y": -781}, {"group": ".py", "id": "geo_grab.py", "label": "geo_grab.py", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/geo_grab.py", "title": "geo_grab.py", "x": 819, "y": -550}, {"group": "file", "id": "LICENSE", "label": "LICENSE", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/LICENSE", "title": "LICENSE", "x": 490, "y": 793}, {"group": ".toml", "id": "pyproject.toml", "label": "pyproject.toml", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/pyproject.toml", "title": "pyproject.toml", "x": -170, "y": 921}, {"group": ".md", "id": "README.md", "label": "README.md", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/README.md", "title": "README.md", "x": -894, "y": -165}, {"group": ".png", "id": "usage.png", "label": "usage.png", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/usage.png", "title": "usage.png", "x": 193, "y": -968}, {"group": ".lock", "id": "uv.lock", "label": "uv.lock", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/uv.lock", "title": "uv.lock", "x": -794, "y": 544}]),
+    nodes:  new vis.DataSet([{"fixed": true, "group": "directory", "icon": {"code": "\uf07b", "color": "gold", "size": 100}, "id": ".", "label": "geo-grab", "level": 0, "link": "https://github.com/hwelch-fle/geo-grab", "title": "geo-grab", "x": 0, "y": 3}, {"group": "file", "id": ".gitignore", "label": ".gitignore", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/.gitignore", "title": ".gitignore", "x": 429, "y": -911}, {"group": "file", "id": ".python-version", "label": ".python-version", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/.python-version", "title": ".python-version", "x": 940, "y": 425}, {"group": ".py", "id": "geo_grab.py", "label": "geo_grab.py", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/geo_grab.py", "title": "geo_grab.py", "x": -421, "y": -1000}, {"group": "file", "id": "LICENSE", "label": "LICENSE", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/LICENSE", "title": "LICENSE", "x": -949, "y": -392}, {"group": ".toml", "id": "pyproject.toml", "label": "pyproject.toml", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/pyproject.toml", "title": "pyproject.toml", "x": -372, "y": 962}, {"group": ".md", "id": "README.md", "label": "README.md", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/README.md", "title": "README.md", "x": -962, "y": 378}, {"group": ".png", "id": "usage.png", "label": "usage.png", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/usage.png", "title": "usage.png", "x": 954, "y": -403}, {"group": ".lock", "id": "uv.lock", "label": "uv.lock", "level": 1, "link": "https://github.com/hwelch-fle/geo-grab/tree/master/uv.lock", "title": "uv.lock", "x": 380, "y": 936}]),
     edges: new vis.DataSet([{"from": ".", "to": ".gitignore"}, {"from": ".", "to": ".python-version"}, {"from": ".", "to": "geo_grab.py"}, {"from": ".", "to": "LICENSE"}, {"from": ".", "to": "pyproject.toml"}, {"from": ".", "to": "README.md"}, {"from": ".", "to": "usage.png"}, {"from": ".", "to": "uv.lock"}]),
 }
 const options = {
@@ -354,7 +354,7 @@ const tomSelectNodes = new TomSelect("#tom-select-nodes", {
   
   onClear: resetNetwork,
   
-  plugins: ['remove_button', 'clear_button'],
+  plugins: ['remove_button', 'clear_button', 'input_autogrow'],
 });
 
 
