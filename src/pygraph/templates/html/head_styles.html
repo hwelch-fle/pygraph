@@ -35,7 +35,9 @@
     .left {
         z-index: 1;
         position: fixed;
+        {% if selectors.edges and 'input_autogrow' in selectors.edges.plugins or [] %}
         width: 45%;
+        {% endif %}
         left: 0;
         padding: 20px;
     }
@@ -43,7 +45,9 @@
     .right {
         z-index: 1;
         position: fixed;
+        {% if selectors.nodes and 'input_autogrow' in selectors.nodes.plugins or [] %}
         width: 45%;
+        {% endif %}
         right: 0;
         padding: 20px;
     }
