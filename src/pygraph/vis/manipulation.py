@@ -27,16 +27,9 @@ class ManipulationOptions(TypedDict, total=False):
 DefaultControlNode: NodeOptions = {
     'shape': 'dot',
     'size': 6,
-    'color': {
-        'background': '#ff0000',
-        'border': '#3c3c3c',
-        'highlight': {
-            'background': '#07f968',
-            'border': '#3c3c3c'
-        }
-    },
-  'borderWidth': 2,
-  'borderWidthSelected': 2,
+    'color': {'background': '#ff0000', 'border': '#3c3c3c', 'highlight': {'background': '#07f968', 'border': '#3c3c3c'}},
+    'borderWidth': 2,
+    'borderWidthSelected': 2,
 }
 
 DefaultManipulationOptions: ManipulationOptions = {
@@ -47,6 +40,6 @@ DefaultManipulationOptions: ManipulationOptions = {
     'editEdge': True,
     'deleteNode': True,
     'deleteEdge': True,
-    'controlNodeStyle': DefaultControlNode
+    'controlNodeStyle': DefaultControlNode,
 }
 DefaultManipulationOptions = MappingProxyType(DefaultManipulationOptions)  # type: ignore

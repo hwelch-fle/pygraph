@@ -61,6 +61,7 @@ class ProgressorSchema(TypedDict, total=False):
 
 class NodeSelectorSchema(TypedDict, total=False):
     """See: https://tom-select.js.org/docs/api/"""
+
     enabled: bool
     """Set to False to disable the selector"""
     placeholder_text: str

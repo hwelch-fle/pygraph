@@ -1,15 +1,13 @@
 import fnmatch
 import hashlib
-import subprocess
+import subprocess  # noqa: S404
 import sys
 import tempfile
 from collections.abc import (
     Iterable,
     Mapping,
-    MutableMapping,
 )
 from copy import deepcopy
-from functools import cached_property
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -24,7 +22,9 @@ from pygraph import (
     Network,
     Node,
 )
-from pygraph.pygraph import deprox
+from pygraph.builders.base import BuilderProto
+from pygraph.builders.styles.models import DirectoryBuilderOpts
+from pygraph.utils import deep_update
 
 if TYPE_CHECKING:
     from .styles.models import DirectoryBuilderOpts
@@ -37,13 +37,17 @@ from pygraph.vis import (
     NodeOptions,
 )
 
-__all__ = 'DirectoryBuilder',
+__all__ = 'DirectoryBuilder', 'GitRepoBuilder',
 
 
-def _get_git(url: str) -> Path:
+def _get_git(url: str, *, silent: bool = False) -> Path:
     repo = f'{url.rsplit('/', maxsplit=1)[-1].replace('.git', '')}'
     tmp = tempfile.TemporaryDirectory(prefix=f'{repo}_', delete=False)
-    subprocess.run(['git', 'clone', '--single-branch', '--depth=1', url, tmp.name])
+    subprocess.run(
+        ['git', 'clone', '--single-branch', '--depth=1', url, tmp.name],
+        stdout=subprocess.DEVNULL if silent else None,
+        stderr=subprocess.STDOUT if silent else None,
+    )
     return Path(tmp.name)
 
 
@@ -60,21 +64,7 @@ class _ExcludeOpts(TypedDict, total=False):
     patterns: list[str]
 
 
-def deep_update[K, V](target: Mapping[K, V], updates: Mapping[K, V]) -> MutableMapping[K, V]:
-    updated = deprox(target)
-    for k in target.keys() | updates.keys():
-        if k not in updates:
-            continue
-        if k not in target:
-            updated[k] = updates[k]  # type: ignore
-        elif isinstance(target[k], Mapping):
-            updated[k] = deep_update(updates[k], target[k])  # type: ignore
-        else:
-            updated[k] = deepcopy(target[k])  # type: ignore
-    return updated  # type: ignore
-
-
-class DirectoryBuilder:
+class DirectoryBuilder(BuilderProto[DirectoryBuilderOpts]):
     """Build a Network from a Directory"""
 
     _trees: ClassVar[dict[str, str]] = {
@@ -86,7 +76,7 @@ class DirectoryBuilder:
         self,
         root: Path | str,
         sub_path: Path | str = '',
-        style: DirectoryBuilderOpts | None = None,  # type: ignore
+        style: DirectoryBuilderOpts | None = None,
         *,
         file_options: NodeOptions | None = None,
         dir_options: NodeOptions | None = None,
@@ -103,17 +93,12 @@ class DirectoryBuilder:
         max_levels: int | None = None,
     ) -> None:
         """..."""
+        # Cache
+        self._data: tuple[list[Node], list[Edge]] | None = None
 
-        # Parse github URL or Filepath
-        if isinstance(root, str) and root.startswith('http'):
-            host, user, repo, root = self._clone_repo(root)
-        else:
-            root = Path(root).resolve()
-            host, user, repo, root = (None, None, root.name, root)
-
-        self.host = host
-        self.user = user
-        self.repo = repo
+        root = Path(root).resolve()
+        name, root = root.name, root
+        self.name = name
         self.root = root
         self.sub_path = root / sub_path
 
@@ -130,8 +115,8 @@ class DirectoryBuilder:
                 'file_node_size': file_node_size,
                 'dir_node_size': dir_node_size,
                 'ignores': ignores or {},
-            }
-        )  # type: ignore
+            },
+        )  # type: ignore (Unfreezing defaults)
         self.file_options = self.style.get('file_options', {})
         self.dir_options = self.style.get('dir_options', {})
         self.root_options = self.style.get('root_options', {})
@@ -154,11 +139,7 @@ class DirectoryBuilder:
         self.network_options['groups']['file'] = self.file_options
 
     def __repr__(self) -> str:
-        return f'{type(self).__name__}({self.repo})'
-
-    def _clone_repo(self, url: str) -> tuple[str, str, str, Path]:
-        parts = url.rsplit('/', maxsplit=3)
-        return parts[-3], parts[-2], parts[-1].removesuffix('.git'), _get_git(url)
+        return f'{type(self).__name__}({self.name})'
 
     def _populate_group(self, file_extension: str, opts: NodeOptions) -> NodeOptions:
         temp = deepcopy(self.file_options)
@@ -185,7 +166,8 @@ class DirectoryBuilder:
             raise ValueError(f'Path object: {ig} does not exist or is not a file.')
 
         return [
-            line.strip() for line in ig.read_text().split('\n')
+            line.strip()
+            for line in ig.read_text().split('\n')
             if line and line[0] != '#'
         ]
 
@@ -315,7 +297,78 @@ class DirectoryBuilder:
                 if res := self._file_parts(child):
                     yield res
 
-    def _create_link(self, node: Node, *, host: str, user: str, repo: str, branch: str, tree: str) -> None:
+    @property
+    def data(self) -> tuple[list[Node], list[Edge]]:
+        if self._data:
+            return self._data
+        nodes = list[Node]()
+        edges = list[Edge]()
+        for nd, ed in self._walk() if not self.max_levels else self._fast_walk(self.root, self.max_levels):
+            nodes.append(nd)
+            if len(set(ed.key)) > 1:
+                edges.append(ed)
+        node_ids = {n.key for n in nodes}
+        edges = [e for e in edges if all(n in node_ids for n in e.key)]
+        self._data = (nodes, edges)
+        return self._data
+
+    @property
+    def nodes(self) -> list[Node]:
+        return self.data[0]
+
+    @property
+    def edges(self) -> list[Edge]:
+        return self.data[1]
+
+    def network(self, **options: Unpack[NetworkOptions]) -> Network:
+        """Get a Network object from the builder
+
+        Args:
+            **options: Any additional options you want to set at the Network level
+
+        Note:
+            When called, the Node/Edge data from the Builder is deepcopied into the Network.
+        """
+        nodes = deepcopy(self.nodes)
+        edges = deepcopy(self.edges)
+        opts = deepcopy(self.network_options)
+        opts.update(options)
+        nx = Network(**opts)
+        nx.add_nodes_from(nodes)
+        nx.add_edges_from(edges)
+        root_id = '.'
+        nx[root_id].set(**self.root_options)
+        nx[root_id].data['level'] = 0
+        return nx
+
+    def refresh(self) -> None:
+        self._data = None
+
+
+class GitRepoBuilder(DirectoryBuilder):
+    def __init__(
+        self, repo_url: str, sub_path: Path | str = '', style: DirectoryBuilderOpts | None = None,
+        *,
+        silent: bool = False,  # Set to True to hide git clone output
+        **kwargs: Unpack[DirectoryBuilderOpts]) -> None:
+        if not repo_url.startswith('http'):
+            raise ValueError(f'{type(self).__name__} expects a url, got {repo_url}')
+
+        # Parse github URL or Filepath
+        host, user, repo, root = self._clone_repo(repo_url, silent=silent)
+        super().__init__(root=root, sub_path=sub_path, style=style, **kwargs)
+        self.host = host
+        self.user = user
+        self.name = repo
+        self.root = root
+        self.sub_path = root / sub_path
+
+    def _clone_repo(self, url: str, *, silent: bool = False) -> tuple[str, str, str, Path]:
+        parts = url.rsplit('/', maxsplit=3)
+        return parts[-3], parts[-2], parts[-1].removesuffix('.git'), _get_git(url, silent=silent)
+
+    def _convert_link(self, node: Node, *, host: str, user: str, repo: str, branch: str, tree: str) -> None:
+        """Convert a local file:// uri to a webrepository link"""
         # Skip nodes with no link set
         if 'link' not in node.data or not isinstance(node.data['link'], str):
             return
@@ -349,7 +402,7 @@ class DirectoryBuilder:
         rel = pth.relative_to(self.root, walk_up=True).as_posix()
         node.data['link'] = f'https://{host}/{user}/{repo}/{tree}/{branch}/{rel}'
 
-    def delete_directory(self, *, force: bool = False):
+    def delete_temp_directory(self, *, force: bool = False):
         """Delete the root directory (used when targeting a web-repo and git-cloning into a tempdir)"""
         is_temp = self.root.is_relative_to(Path(tempfile.TemporaryDirectory(delete=True).name).parent)
         if not is_temp and not force:
@@ -365,48 +418,7 @@ class DirectoryBuilder:
                 d.rmdir()
         self.root.rmdir()
 
-    @cached_property
-    def data(self) -> tuple[list[Node], list[Edge]]:
-        nodes = list[Node]()
-        edges = list[Edge]()
-        for nd, ed in (self._walk() if not self.max_levels else self._fast_walk(self.root, self.max_levels)):
-            nodes.append(nd)
-            if len(set(ed.key)) > 1:
-                edges.append(ed)
-        node_ids = {n.key for n in nodes}
-        edges = [e for e in edges if all(n in node_ids for n in e.key)]
-        return nodes, edges
-
-    @property
-    def nodes(self) -> list[Node]:
-        return self.data[0]
-
-    @property
-    def edges(self) -> list[Edge]:
-        return self.data[1]
-
-    def network(self, **options: Unpack[NetworkOptions]) -> Network:
-        """Get a Network object from the builder
-
-        Args:
-            **options: Any additional options you want to set at the Network level
-
-        Note:
-            When called, the Node/Edge data from the Builder is deepcopied into the Network.
-        """
-        nodes = deepcopy(self.nodes)
-        edges = deepcopy(self.edges)
-        opts = deepcopy(self.network_options)
-        opts.update(options)
-        nx = Network(**opts)
-        nx.add_nodes_from(nodes)
-        nx.add_edges_from(edges)
-        root_id = '.'
-        nx[root_id].set(**self.root_options)
-        nx[root_id].data['level'] = 0
-        return nx
-
-    def web_network(
+    def network(
         self,
         host: str | None = None,
         user: str | None = None,
@@ -415,10 +427,10 @@ class DirectoryBuilder:
         tree: str | None = None,
         **options: Unpack[NetworkOptions],
     ) -> Network:
-        """Get a network """
+        """Get a network"""
         host = host or self.host
         user = user or self.user
-        repo = repo or self.repo
+        repo = repo or self.name
         tree = tree or self._trees.get(str(host), 'blob')
         branch = branch or _get_branch(self.root)
         if not all((host, user, branch, tree)):
@@ -426,9 +438,9 @@ class DirectoryBuilder:
                 'web_network requires that a repo, user, and host are set '
                 f'({host=}, {user=}, {repo=}, {tree=}, {branch=})'
             )
-        nw = self.network(**options)
+        nw = super().network(**options)
         for node in nw.nodes:
-            self._create_link(
+            self._convert_link(
                 node,
                 host=str(host),
                 user=str(user),
@@ -437,9 +449,3 @@ class DirectoryBuilder:
                 tree=tree,
             )
         return nw
-
-    def refresh(self) -> None:
-        try:
-            del self.data
-        except AttributeError:
-            pass

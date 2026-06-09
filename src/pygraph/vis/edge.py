@@ -25,6 +25,7 @@ type RGBAColor = str
 #       they should be migrated to frozendict once that is available
 #       and common
 
+
 class Arrow(TypedDict, total=False):
     enabled: bool
     imageHeight: int
@@ -49,7 +50,7 @@ Arrows = TypedDict(
         'middle': Arrow | bool,
         'from': Arrow | bool,
     },
-    total=False
+    total=False,
 )
 
 DefaultArrows: Arrows = {
@@ -66,7 +67,7 @@ ArrowOffset = TypedDict(
         'to': float,
         'from': float,
     },
-    total=False
+    total=False,
 )
 
 DefaultArrowOffset: ArrowOffset = {
@@ -260,8 +261,18 @@ DefaultShadow = MappingProxyType(DefaultShadow)  # type: ignore
 
 class Smoothing(TypedDict, total=False):
     enabled: bool
-    type: Literal['dynamic', 'continuous', 'discrete', 'diagonalCross', 'straightCross',
-                  'horizontal', 'vertical', 'curvedCW', 'curvedCCW', 'cubicBezier']
+    type: Literal[
+        'dynamic',
+        'continuous',
+        'discrete',
+        'diagonalCross',
+        'straightCross',
+        'horizontal',
+        'vertical',
+        'curvedCW',
+        'curvedCCW',
+        'cubicBezier',
+    ]
     forceDirection: bool | Literal['horizontal', 'vertical', 'none']
     roundness: float
 
@@ -310,9 +321,11 @@ class _EdgeOptions(TypedDict, total=False):
 
 
 if TYPE_CHECKING:
+
     class EdgeOptions(_EdgeOptions, extra_items=Any): ...
 
 else:
+
     class EdgeOptions(_EdgeOptions): ...
 
 
