@@ -135,8 +135,6 @@ def main():
         )
         nx.add_node(repo_node)
         nx.add_edge((f'user:{user}', f'repo:{repo}'))
-        builder.delete_temp_directory()
-        print(f'cleaned up {repo}')
 
     nx.spring_solve()
     out = Path('docs/ref/index.html')
@@ -158,11 +156,4 @@ def main():
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except Exception:
-        print('[FAILED]: Cleaning...')
-        for builder in BUILT:
-            builder.delete_temp_directory()
-            print(f'Deleted {builder.name}')
-        raise
+    main()
