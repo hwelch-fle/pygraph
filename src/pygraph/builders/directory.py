@@ -39,16 +39,15 @@ from pygraph.vis import (
 
 __all__ = 'DirectoryBuilder', 'GitRepoBuilder',
 
-
-def _get_git(url: str, *, silent: bool = False) -> Path:
+def _get_git(url: str, *, silent: bool = False) -> tempfile.TemporaryDirectory[str]:
     repo = f'{url.rsplit('/', maxsplit=1)[-1].replace('.git', '')}'
-    tmp = tempfile.TemporaryDirectory(prefix=f'{repo}_', delete=False)
+    tmp = tempfile.TemporaryDirectory(prefix=f'{repo}_', delete=True)
     subprocess.run(
         ['git', 'clone', '--single-branch', '--depth=1', url, tmp.name],
         stdout=subprocess.DEVNULL if silent else None,
         stderr=subprocess.STDOUT if silent else None,
     )
-    return Path(tmp.name)
+    return tmp
 
 
 def _get_branch(repo: Path) -> str:
@@ -365,7 +364,9 @@ class GitRepoBuilder(DirectoryBuilder):
 
     def _clone_repo(self, url: str, *, silent: bool = False) -> tuple[str, str, str, Path]:
         parts = url.rsplit('/', maxsplit=3)
-        return parts[-3], parts[-2], parts[-1].removesuffix('.git'), _get_git(url, silent=silent)
+        # Store a reference to the temporary directory so it's not deleted until we are
+        self.__temp = _get_git(url, silent=silent)
+        return parts[-3], parts[-2], parts[-1].removesuffix('.git'), Path(self.__temp.name)
 
     def _convert_link(self, node: Node, *, host: str, user: str, repo: str, branch: str, tree: str) -> None:
         """Convert a local file:// uri to a webrepository link"""
@@ -401,22 +402,6 @@ class GitRepoBuilder(DirectoryBuilder):
         # Handle all child nodes
         rel = pth.relative_to(self.root, walk_up=True).as_posix()
         node.data['link'] = f'https://{host}/{user}/{repo}/{tree}/{branch}/{rel}'
-
-    def delete_temp_directory(self, *, force: bool = False):
-        """Delete the root directory (used when targeting a web-repo and git-cloning into a tempdir)"""
-        is_temp = self.root.is_relative_to(Path(tempfile.TemporaryDirectory(delete=True).name).parent)
-        if not is_temp and not force:
-            raise FileExistsError(f'{self.root} is not a temp directory, run with `force = True` to force delete')
-        for r, ds, fs in self.root.walk(top_down=False):
-            r.chmod(0o0200)
-            for f in fs:
-                f = r / f
-                f.chmod(0o0200)
-                f.unlink()
-            for d in ds:
-                d = r / d
-                d.rmdir()
-        self.root.rmdir()
 
     def network(
         self,
