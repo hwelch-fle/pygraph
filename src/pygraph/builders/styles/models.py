@@ -25,3 +25,6 @@ class DirectoryBuilderOpts(TypedDict, total=False):
     file_node_size: Literal['filesize', 'linecount', None]
     dir_node_size: Literal['filesize', 'filecount', None]
     ignores: Path | str | list[str | Path] | _ExcludeOpts
+
+
+class GitHubIssueBuilderOpts(TypedDict, total=False): ...
