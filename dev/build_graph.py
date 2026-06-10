@@ -102,6 +102,8 @@ def main():
             'arrows': 'to',
             'length': 200,
         },
+        configure={'enabled': False},
+        interaction={'navigationButtons': True},
     )
     nx.barnes_hut(gravitationalConstant=-6000, avoidOverlap=0.75)
     for builder in BUILT:
