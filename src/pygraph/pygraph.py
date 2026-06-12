@@ -336,7 +336,6 @@ class Network:
 
     def spring_solve(
         self,
-        scale_factor: int = 1000,
         pos: dict[int, tuple[float, float]] | None = None,
         fixed: set[int] | None = None,
         k: float | None = None,
@@ -354,7 +353,6 @@ class Network:
         speed up rendering time for complex graphs.
 
         Args:
-            scale_factor: Scale the position (`0->1`) with this factor (default: `1000`)
             *args: [See Here](https://www.rustworkx.org/apiref/rustworkx.digraph_spring_layout.html)
         """
 
@@ -365,8 +363,8 @@ class Network:
         for node_id in self.node_map.values():
             x, y = layout[node_id]
             node = self.graph[node_id]
-            node['x'] = int(x * scale_factor)
-            node['y'] = int(y * scale_factor)
+            node['x'] = int(x)
+            node['y'] = int(y)
 
     # Dunder Overrides
 
