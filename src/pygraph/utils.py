@@ -43,7 +43,10 @@ def shortest_paths(nx: Network, fr: Node | NodeId, to: Node | NodeId, *, directe
     shortest = rx.digraph_all_shortest_paths(
         nx.graph, fr, to, as_undirected=not directed
     )
-    return [[nx[edge] for edge in itertools.pairwise(path)] for path in shortest]
+    try:
+        return [[nx.graph.get_edge_data(*edge) for edge in itertools.pairwise(path)] for path in shortest]
+    except rx.NoEdgeBetweenNodes:
+        return []
 
 
 def style_edges(edges: Iterable[Edge], **options: Unpack[EdgeOptions]) -> list[Edge]:
